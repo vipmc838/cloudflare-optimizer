@@ -32,24 +32,24 @@ class ConfigLoader:
         self.config['cloudflare'] = {
             # 以下参数留空，以使用 CloudflareST 的默认值
             'n': '200',
-            't': '',
-            'dn': '',
-            'dt': '',
+            't': '4',
+            'dn': '1',
+            'dt': '10',
             'tp': '',
             'url': '',
-            'httping': '',
+            'httping': 'false',
             'httping_code': '',
             'cfcolo': '',
-            'tl': '',
-            'tll': '',
+            'tl': '200',
+            'tll': '40',
             'tlr': '',
             'sl': '12',
             'p': '',
             'ip': '',
-            'o': '/app/data/result.csv',
+            'o': self.config.get('paths', 'result_file'),
             'dd': 'true', # 默认不禁用下载测速
-            'allip': '',
-            'debug': '',
+            'allip': 'false',
+            'debug': 'false',
             'cron': '0 */3 * * *',
             'ipv4': 'true',
             'ipv6': 'false',
@@ -110,8 +110,14 @@ class ConfigLoader:
         # 布尔参数
         bool_keys = ['httping', 'dd', 'allip', 'debug', 'ipv4', 'ipv6', 're_install']
         for key in bool_keys:
-            value = self.getboolean(section, key)
-            args[key] = value
+            # 直接调用 getboolean 会在值为空字符串时报错。
+            # 我们需要先获取字符串，如果为空则视为 False，否则再进行转换。
+            value_str = self.get(section, key)
+            if value_str and value_str.lower() in ('true', '1', 'yes', 'on'):
+                args[key] = True
+            else:
+                # 任何其他值（包括空字符串）都将被视为 False
+                args[key] = False
         
         # 安全处理API密钥
         if 'api_key' in args:
