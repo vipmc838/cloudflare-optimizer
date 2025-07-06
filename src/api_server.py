@@ -15,7 +15,8 @@ cf_optimizer = CloudflareOptimizer()
 logger = logging.getLogger("api")
 
 # 挂载静态文件目录
-app.mount("/static", StaticFiles(directory=Path(__file__).parent.parent / "static"), name="static")
+#app.mount("/static", StaticFiles(directory=Path(__file__).parent.parent / "static"), name="static")
+app.mount("/static", StaticFiles(directory="/app/static"), name="static")
 
 def get_api_key(api_key: str = Security(api_key_header)):
     config_key = config.get('cloudflare', 'api_key')
