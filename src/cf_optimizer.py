@@ -10,7 +10,6 @@ from .config_loader import config
 
 class CloudflareOptimizer:
     def __init__(self):
-        # ... (其他初始化代码)
         # 从配置中获取路径
         self.data_dir = Path(config.get('paths', 'data_dir'))
         self.data_dir.mkdir(exist_ok=True, parents=True)
@@ -21,9 +20,6 @@ class CloudflareOptimizer:
         if os.name == 'nt' and not binary_path_str.endswith('.exe'):
             binary_path_str += '.exe'
         self.binary_path = Path(binary_path_str)
-
-        self.running_file = self.data_dir / "running.tmp"
-        self.test_log_file = self.data_dir / "test_log.tmp"
 
         self._init_ip_files()
     
@@ -107,83 +103,80 @@ class CloudflareOptimizer:
         """执行Cloudflare IP优选"""
         # 检查并安装工具
         if not self.binary_path.exists():
-          # ... (下载和安装工具代码)
             if not self._download_cloudflarest():
                 self.logger.error("CloudflareST not found and download failed")
                 return None
         
+        # 获取配置参数
+        args = config.get_args_dict()
+        
+        # 构建命令
+        cmd = [str(self.binary_path)]
+        
+        # 添加数值参数
+        num_params = ['n', 't', 'dn', 'dt', 'tp', 'p', 'tl', 'tll', 'sl']
+        for param in num_params:
+            if param in args:
+                cmd.extend([f"-{param}", str(args[param])])
+        
+        # 添加浮点参数
+        float_params = ['tlr']
+        for param in float_params:
+            if param in args:
+                cmd.extend([f"-{param}", str(args[param])])
+        
+        # 添加其他字符串参数 (文件路径参数将单独处理)
+        str_params = ['url', 'httping_code', 'cfcolo', 'ip']
+        for param in str_params:
+            if param in args and args[param]:
+                cmd.extend([f"-{param}", str(args[param])])
+        
+        # 添加布尔参数
+        bool_params = {'httping': '-httping', 'dd': '-dd', 'allip': '-allip', 'debug': '-debug'}
+        for param, flag in bool_params.items():
+            if param in args and args[param]:
+                cmd.append(flag)
+        
+        # 显式处理输入文件 -f (使用绝对路径)
+        # CloudflareST 支持多个 -f 参数
+        ipv4_file = config.get('paths', 'ipv4_file')
+        ipv6_file = config.get('paths', 'ipv6_file')
+        if args.get('ipv4'):
+            cmd.extend(["-f", ipv4_file])
+        if args.get('ipv6'):
+            cmd.extend(["-f", ipv6_file])
+        
+        # 显式处理输出文件 -o (使用绝对路径)
+        result_file = Path(args.get('o', config.get('paths', 'result_file')))  # 确保正确使用了配置中的 result_file
+        cmd.extend(["-o", str(result_file)])
+        
+        self.logger.info(f"Running command: {' '.join(cmd)}")
+        
+        # 执行命令
         try:
-            # 创建临时文件，表示测试正在运行
-            self.running_file.touch()
+            # 使用 subprocess.run 等待命令完成并捕获输出
+            process = subprocess.run(
+                cmd,  # 确保 CloudflareST 工具路径正确
+                cwd=self.data_dir,
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='ignore'
+            )
             
-            # 获取配置参数
-            args = config.get_args_dict()
+            # 记录 CloudflareST 的标准输出和错误输出
+            if process.stdout:
+                for line in process.stdout.strip().split('\n'):
+                    self.logger.info(line)
+            if process.stderr:
+                self.logger.warning("CloudflareST stderr:")
+                for line in process.stderr.strip().split('\n'):
+                    self.logger.warning(line)
             
-            # 构建命令
-            cmd = [str(self.binary_path)]
+            # 记录最优IP
+            self.log_best_ip(result_file)
             
-            # 添加参数 (与之前相同的参数处理逻辑)...
-            num_params = ['n', 't', 'dn', 'dt', 'tp', 'p', 'tl', 'tll', 'sl']
-            for param in num_params:
-                if param in args:
-                    cmd.extend([f"-{param}", str(args[param])])
-            
-            float_params = ['tlr']
-            for param in float_params:
-                if param in args:
-                    cmd.extend([f"-{param}", str(args[param])])
-            
-            str_params = ['url', 'httping_code', 'cfcolo', 'ip']
-            for param in str_params:
-                if param in args and args[param]:
-                    cmd.extend([f"-{param}", str(args[param])])
-            
-            bool_params = {'httping': '-httping', 'dd': '-dd', 'allip': '-allip', 'debug': '-debug'}
-            for param, flag in bool_params.items():
-                if param in args and args[param]:
-                    cmd.append(flag)
-            
-            ipv4_file = config.get('paths', 'ipv4_file')
-            ipv6_file = config.get('paths', 'ipv6_file')
-            if args.get('ipv4'):
-                cmd.extend(["-f", ipv4_file])
-            if args.get('ipv6'):
-                cmd.extend(["-f", ipv6_file])
-            
-            result_file = Path(args.get('o', config.get('paths', 'result_file')))
-            cmd.extend(["-o", str(result_file)])
-            
-            self.logger.info(f"Running command: {' '.join(cmd)}")
-            
-            # 使用 Popen 执行命令，并实时输出到 test_log_file
-            with open(self.test_log_file, "w") as log_file:
-                process = subprocess.Popen(
-                    cmd,
-                    cwd=self.data_dir,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,  # 将 stderr 也输出到 stdout
-                    text=True,
-                    encoding='utf-8',
-                    errors='ignore'
-                )
-                
-                while True:
-                    line = process.stdout.readline()
-                    if not line:
-                        break
-                    log_file.write(line)
-                    log_file.flush()  # 立即写入，避免缓冲
-                    self.logger.info(f"CloudflareST: {line.strip()}") # 同时在主日志中记录
-                
-                process.wait()  # 等待命令完成
-                
-                if process.returncode != 0:
-                    self.logger.error(f"CloudflareST exited with code {process.returncode}")
-                    return None
-                
-                # 记录最优IP
-                self.log_best_ip(result_file)
-                return result_file
+            return result_file
         except Exception as e:
             self.logger.error(f"Optimization failed: {str(e)}")
             return None
