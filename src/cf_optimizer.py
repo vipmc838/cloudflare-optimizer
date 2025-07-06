@@ -167,8 +167,7 @@ class CloudflareOptimizer:
                     self.logger.info(line.strip())
             
             # 获取结果文件路径
-            output_filename = args.get('o', 'result.csv')
-            result_file = self.data_dir / output_filename
+            result_file = Path(args.get('o', 'data/result.csv'))
             
             # 记录最优IP
             self.log_best_ip(result_file)
@@ -181,8 +180,7 @@ class CloudflareOptimizer:
     def get_results(self):
         """获取优选结果"""
         try:
-            output_filename = config.get('cloudflare', 'o', fallback='result.csv')
-            result_file = self.data_dir / output_filename
+            result_file = Path(config.get('cloudflare', 'o', fallback='data/result.csv'))
             if not result_file.exists():
                 return None
             
@@ -236,5 +234,14 @@ class CloudflareOptimizer:
                     f"下载速度: {speed}MB/s"
                 )
                 self.logger.info(log_msg)
+                
+                # 专门记录最优IP到日志文件
+                log_dir = Path(__file__).parent.parent / "log"
+                log_dir.mkdir(exist_ok=True, parents=True)
+                log_file = log_dir / "cf.log"
+                
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                with open(log_file, "a") as lf:
+                    lf.write(f"[{timestamp}] [INFO] [cf_optimizer] - {log_msg}\n")
         except Exception as e:
             self.logger.error(f"记录最优IP时出错: {str(e)}")
