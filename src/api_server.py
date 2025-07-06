@@ -198,13 +198,12 @@ def dashboard():
             </div>
             <div class="card-body">
                 <div class="ip-info">
-                    <p><strong>IP地址：</strong> {best_ip_info.get('IP地址', 'N/A')}</p>
-                    <p><strong>延迟：</strong> {best_ip_info.get('延迟', 'N/A')} ms</p>
-                    <p><strong>抖动：</strong> {best_ip_info.get('抖动', 'N/A')} ms</p>
-                    <p><strong>丢包率：</strong> {best_ip_info.get('丢包率', 'N/A')}%</p>
-                    <p><strong>下载速度：</strong> {best_ip_info.get('下载速度', 'N/A')} MB/s</p>
-                    <p><strong>位置：</strong> {best_ip_info.get('城市', 'N/A')}, {best_ip_info.get('国家', 'N/A')}</p>
-                    <p><strong>地区码：</strong> {best_ip_info.get('地区码', 'N/A')}</p>
+                    <p><strong>IP地址：</strong> {best_ip_info.get('ip', 'N/A')}</p>
+                    <p><strong>平均延迟：</strong> {best_ip_info.get('avg_latency', 'N/A')} ms</p>
+                    <p><strong>延迟抖动：</strong> {best_ip_info.get('jitter', 'N/A')} ms</p>
+                    <p><strong>丢包率：</strong> {best_ip_info.get('loss_rate', 'N/A')}%</p>
+                    <p><strong>下载速度：</strong> {best_ip_info.get('download_speed', 'N/A')} MB/s</p>
+                    <p><strong>位置：</strong> {best_ip_info.get('location', 'N/A')}</p>
                 </div>
             </div>
         </div>
@@ -321,11 +320,11 @@ def get_best_ip():
         "status": "success",
         "best_ip": best_ip,
         "detail": {
-            "ip": best_ip.get("IP地址", ""),
-            "latency": best_ip.get("延迟", ""),
-            "jitter": best_ip.get("抖动", ""),
-            "loss": best_ip.get("丢包率", ""),
-            "speed": best_ip.get("下载速度", "")
+            "ip": best_ip.get("ip", ""),
+            "latency": best_ip.get("avg_latency", ""),
+            "jitter": best_ip.get("jitter", ""),
+            "loss": best_ip.get("loss_rate", ""),
+            "speed": best_ip.get("download_speed", "")
         }
     }
 
@@ -338,7 +337,7 @@ def get_ip_address():
         raise HTTPException(status_code=404, detail="No results available")
     
     # 返回第一个结果的IP地址
-    return results[0].get("IP地址", "")
+    return results[0].get("ip", "")
 
 @app.get("/parameters", dependencies=[Depends(get_api_key)])
 def get_parameters():
