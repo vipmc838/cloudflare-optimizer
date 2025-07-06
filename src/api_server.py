@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Security, Depends, Query
 from fastapi.security import APIKeyHeader
 from fastapi.responses import PlainTextResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
+#from fastapi.staticfiles import StaticFiles
 from .cf_optimizer import CloudflareOptimizer
 from .config_loader import config
 import logging
@@ -9,13 +9,14 @@ import time
 from pathlib import Path
 import json
 
+
 app = FastAPI()
 api_key_header = APIKeyHeader(name="X-API-Key")
 cf_optimizer = CloudflareOptimizer()
 logger = logging.getLogger("api")
 
 # 挂载静态文件目录
-app.mount("/static", StaticFiles(directory=Path(__file__).parent.parent / "static"), name="static")
+# app.mount("/static", StaticFiles(directory=Path(__file__).parent.parent / "static"), name="static")
 
 def get_api_key(api_key: str = Security(api_key_header)):
     config_key = config.get('cloudflare', 'api_key')
