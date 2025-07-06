@@ -64,19 +64,14 @@ class ConfigLoader:
         args = {}
         section = 'cloudflare'
         
-        # 数值参数
-        num_keys = ['n', 't', 'dn', 'dt', 'tp', 'p', 'tl', 'tll', 'sl']
-        for key in num_keys:
-            value = self.getint(section, key)
-            if value is not None:
-                args[key] = value
-        
-        # 浮点数参数
-        float_keys = ['tlr']
-        for key in float_keys:
-            value = self.getfloat(section, key)
-            if value is not None:
-                args[key] = value
+        # 数值和浮点数参数
+        num_float_keys = ['n', 't', 'dn', 'dt', 'tp', 'p', 'tl', 'tll', 'sl', 'tlr']
+        for key in num_float_keys:
+            # 尝试获取浮点数，如果失败则尝试整数
+            try:
+                args[key] = self.getfloat(section, key)
+            except ValueError:
+                args[key] = self.getint(section, key)
         
         # 字符串参数
         str_keys = ['url', 'httping_code', 'cfcolo', 'f', 'ip', 'o']

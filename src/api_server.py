@@ -182,7 +182,7 @@ def dashboard():
                     
                     <div class="card">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">服务状态</h5>
+                            <h2 class="h5 card-title mb-0">服务状态</h2>  <!-- 使用h2，并添加card-title类 -->
                         </div>
                         <div class="card-body">
                             <p><strong>运行时间：</strong> {time.ctime()}</p>
@@ -198,7 +198,7 @@ def dashboard():
         html += f"""
         <div class="card">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0">当前最优 IP</h5>
+                <h2 class="h5 card-title mb-0">当前最优 IP</h2>
             </div>
             <div class="card-body">
                 <div class="ip-info">
@@ -217,7 +217,7 @@ def dashboard():
         html += """
         <div class="card">
             <div class="card-header bg-warning">
-                <h5 class="mb-0">当前最优 IP</h5>
+                <h2 class="h5 card-title mb-0">当前最优 IP</h2>
             </div>
             <div class="card-body">
                 <p class="text-center">尚未运行优选或没有可用结果</p>
@@ -229,7 +229,7 @@ def dashboard():
     html += f"""
         <div class="card">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0">当前优选参数</h5>
+                <h2 class="h5 card-title mb-0">当前优选参数</h2>
             </div>
             <div class="card-body">
                 {format_parameters(params)}
@@ -241,7 +241,7 @@ def dashboard():
     html += f"""
         <div class="card">
             <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">API 文档</h5>
+                <h2 class="h5 card-title mb-0">API 文档</h2>
             </div>
             <div class="card-body">
                 {format_api_docs()}
