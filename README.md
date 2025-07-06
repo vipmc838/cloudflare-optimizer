@@ -28,7 +28,7 @@ docker run -d \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/log:/app/log \
   -v $(pwd)/config:/app/config \
-  yourusername/cloudflare-ip-optimizer:latest
+  l429609201/cloudflare-ip-optimizer:latest
 ```
 
 ### 使用Docker-Compose运行
@@ -37,7 +37,7 @@ version: '3.8'
 
 services:
   cf-optimizer:
-    image: yourusername/cloudflare-ip-optimizer:latest
+    image: l429609201/cloudflare-ip-optimizer:latest
     container_name: cf-ip-optimizer
     restart: unless-stopped
     ports:
