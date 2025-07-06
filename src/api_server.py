@@ -267,21 +267,46 @@ def dashboard():
     
     return HTMLResponse(content=html)
 
+def get_test_progress():
+    """从 test_log.tmp 文件中读取测试进度"""
+    progress_file = cf_optimizer.test_log_file
+    if not progress_file.exists():
+        return 0  # 无进度文件，表示未运行或出错
+    
+    try:
+        with open(progress_file, "r") as f:
+            lines = f.readlines()
+            #  这里的逻辑需要根据 CloudflareST 的实际输出进行调整
+            #  假设 CloudflareST 每完成一个 IP 的测试，输出一行包含 "测试完成" 的信息
+            completed_count = sum(1 for line in lines if "测速完成" in line)
+            total_count = 200 # 总 IP 数量，需要根据你的 IP 文件或者 CloudflareST 参数动态获取
+            if total_count > 0:
+                return min(1.0, float(completed_count) / total_count)  # 确保不超过 100%
+            else:
+                return 0  # 避免除以 0
+    except Exception:
+        return 0
+
 @app.get("/run", dependencies=[Depends(get_api_key)])
 def run_optimization():
     """手动触发优选"""
     logger.info("Manual optimization triggered via API")
-    result_file = cf_optimizer.run_optimization()
-    if result_file:
-        return {
-            "status": "success",
-            "message": "Optimization completed",
-            "result_file": str(result_file)
-        }
-    return {
-        "status": "error",
-        "message": "Optimization failed"
-    }
+    if cf_optimizer.running_file.exists():
+        # 已经在运行中，返回进度
+        progress = get_test_progress()
+        return {"status": "running", "progress": progress}
+    else:
+        # 开始新的测试
+        result_file = cf_optimizer.run_optimization()  # 异步调用
+        if result_file:
+            return {"status": "success", "message": "Optimization started", "result_file": str(result_file)}
+        else:
+            return {"status": "error", "message": "Failed to start optimization"}
+
+@app.get("/progress", dependencies=[Depends(get_api_key)])
+def get_progress():
+  progress = get_test_progress()
+  return {"status": "success", "progress": progress}
 
 @app.get("/results", dependencies=[Depends(get_api_key)])
 def get_optimization_results(top: int = Query(0, description="返回前N个结果，0表示全部")):
