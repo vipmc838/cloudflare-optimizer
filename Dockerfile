@@ -37,4 +37,4 @@ ENTRYPOINT ["entrypoint.sh"]
 # 设置容器启动时执行的默认命令
 # 假设您的 FastAPI 应用实例在 main.py 文件中，变量名为 app
 # 如果您的文件名或变量名不同，请修改 "main:app"
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "6788"]
