@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.responses import PlainTextResponse, HTMLResponse
-#from fastapi.staticfiles import StaticFiles
+from fastapi.staticfiles import StaticFiles
 from .cf_optimizer import CloudflareOptimizer
 from .config_loader import config
 import logging
@@ -13,8 +13,6 @@ app = FastAPI()
 cf_optimizer = CloudflareOptimizer()
 logger = logging.getLogger("api")
 
-# 挂载静态文件目录
-#app.mount("/static", StaticFiles(directory="/app/static"), name="static")
 
 def get_api_key(api_key: str = Query(..., description="API认证密钥")):
     config_key = config.get('cloudflare', 'api_key')
