@@ -1,4 +1,4 @@
-# Cloudflare IP 优选服务
+# Cloudflare IP 优选服务 docker打包版
 
 🌩 自动测试 Cloudflare CDN 延迟和速度，自动优选最佳IP地址，并提供API接口。
 
