@@ -24,6 +24,8 @@ thsrite大佬的[Cloudflare IP优选](https://github.com/jxxghp/MoviePilot-Plugi
 ```docker-cli
 docker run -d \
   --name cf-optimizer \
+  -e puid=1000 \
+  -e pgid=1000 \
   -p 6788:6788 \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/log:/app/log \
@@ -46,4 +48,8 @@ services:
       - ./data:/app/data
       - ./log:/app/log
       - ./config:/app/config
+    environment:
+      - puid=1000
+      - pgid=1000
+      - tz=Asia/Shanghai
 ```
