@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 COPY . /app
 
 # 创建必要目录
-RUN mkdir -p /app/data /app/log /app/config
+RUN mkdir -p /app/data /app/log /app/config /app/static
 
 # 安装 Python 依赖
 RUN pip install --no-cache-dir -r requirements.txt
