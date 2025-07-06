@@ -1,7 +1,6 @@
-from fastapi import FastAPI, HTTPException, Security, Depends, Query
-from fastapi.security import APIKeyHeader
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.responses import PlainTextResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
+#from fastapi.staticfiles import StaticFiles
 from .cf_optimizer import CloudflareOptimizer
 from .config_loader import config
 import logging
@@ -9,16 +8,15 @@ import time
 from pathlib import Path
 import json
 
+
 app = FastAPI()
-api_key_header = APIKeyHeader(name="X-API-Key")
 cf_optimizer = CloudflareOptimizer()
 logger = logging.getLogger("api")
 
 # 挂载静态文件目录
-#app.mount("/static", StaticFiles(directory=Path(__file__).parent.parent / "static"), name="static")
 #app.mount("/static", StaticFiles(directory="/app/static"), name="static")
 
-def get_api_key(api_key: str = Security(api_key_header)):
+def get_api_key(api_key: str = Query(..., description="API认证密钥")):
     config_key = config.get('cloudflare', 'api_key')
     if api_key != config_key:
         # 安全记录API密钥尝试
@@ -92,31 +90,31 @@ def format_api_docs() -> str:
             "endpoint": "/run",
             "method": "GET",
             "description": "手动触发Cloudflare IP优选",
-            "example": f"curl -H 'X-API-Key: your-key' {base_url}/run"
+            "example": f"curl '{base_url}/run?api_key=your-key'"
         },
         {
             "endpoint": "/results",
             "method": "GET",
             "description": "获取优选结果列表（可选top参数限制数量）",
-            "example": f"curl -H 'X-API-Key: your-key' {base_url}/results?top=5"
+            "example": f"curl '{base_url}/results?top=5&api_key=your-key'"
         },
         {
             "endpoint": "/best",
             "method": "GET",
             "description": "获取最优IP及其完整数据",
-            "example": f"curl -H 'X-API-Key: your-key' {base_url}/best"
+            "example": f"curl '{base_url}/best?api_key=your-key'"
         },
         {
             "endpoint": "/ip",
             "method": "GET",
             "description": "仅获取最优IP地址（纯文本响应）",
-            "example": f"curl -H 'X-API-Key: your-key' {base_url}/ip"
+            "example": f"curl '{base_url}/ip?api_key=your-key'"
         },
         {
             "endpoint": "/parameters",
             "method": "GET",
             "description": "获取当前使用的所有参数",
-            "example": f"curl -H 'X-API-Key: your-key' {base_url}/parameters"
+            "example": f"curl '{base_url}/parameters?api_key=your-key'"
         }
     ]
     
@@ -182,7 +180,7 @@ def dashboard():
                     
                     <div class="card">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">服务状态</h5>
+                            <h2 class="h5 card-title mb-0">服务状态</h2>  <!-- 使用h2，并添加card-title类 -->
                         </div>
                         <div class="card-body">
                             <p><strong>运行时间：</strong> {time.ctime()}</p>
@@ -198,7 +196,7 @@ def dashboard():
         html += f"""
         <div class="card">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0">当前最优 IP</h5>
+                <h2 class="h5 card-title mb-0">当前最优 IP</h2>
             </div>
             <div class="card-body">
                 <div class="ip-info">
@@ -217,7 +215,7 @@ def dashboard():
         html += """
         <div class="card">
             <div class="card-header bg-warning">
-                <h5 class="mb-0">当前最优 IP</h5>
+                <h2 class="h5 card-title mb-0">当前最优 IP</h2>
             </div>
             <div class="card-body">
                 <p class="text-center">尚未运行优选或没有可用结果</p>
@@ -229,7 +227,7 @@ def dashboard():
     html += f"""
         <div class="card">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0">当前优选参数</h5>
+                <h2 class="h5 card-title mb-0">当前优选参数</h2>
             </div>
             <div class="card-body">
                 {format_parameters(params)}
@@ -241,16 +239,16 @@ def dashboard():
     html += f"""
         <div class="card">
             <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">API 文档</h5>
+                <h2 class="h5 card-title mb-0">API 文档</h2>
             </div>
             <div class="card-body">
                 {format_api_docs()}
                 <div class="alert alert-warning mt-3">
                     <strong>安全提示：</strong>
                     <ul>
-                        <li>所有API请求都需要在Header中添加 <code>X-API-Key: your-secret-key</code></li>
-                        <li>请勿将API密钥泄露给他人</li>
-                        <li>建议定期更换API密钥</li>
+                        <li>所有API请求都需要在URL中添加 <code>?api_key=your-secret-key</code> 参数。</li>
+                        <li>请勿将API密钥泄露给他人，URL中的密钥可能会被记录在服务器日志、浏览器历史等地方。</li>
+                        <li>建议定期更换API密钥。</li>
                         <li>仅允许受信任的IP访问API服务</li>
                     </ul>
                 </div>
