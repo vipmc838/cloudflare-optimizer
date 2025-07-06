@@ -188,9 +188,28 @@ class CloudflareOptimizer:
             if not result_file.exists():
                 return None
             
+            # 定义一个从中文到英文的映射，并移除空格，使键更健壮
+            header_map = {
+                "IP 地址": "ip",
+                "已发送": "sent",
+                "已接收": "received",
+                "丢包率": "loss_rate",
+                "平均延迟": "avg_latency",
+                "延迟抖动": "jitter",
+                "下载速度": "download_speed",
+                "TCP 协议": "tcp_protocol",
+                "HTTP 协议": "http_protocol",
+                "TLS 协议": "tls_protocol",
+                "文件 URL": "file_url",
+                "地区": "location",
+                "组织": "organization"
+            }
+
             results = []
-            with open(result_file, "r") as f:
-                headers = f.readline().strip().split(',')
+            with open(result_file, "r", encoding='utf-8') as f:
+                raw_headers = f.readline().strip().split(',')
+                # 清理并映射表头，对于未知表头，移除空格并转为小写
+                headers = [header_map.get(h.strip(), h.strip().replace(" ", "_").lower()) for h in raw_headers]
                 for line in f:
                     values = line.strip().split(',')
                     if len(values) < len(headers):
@@ -209,25 +228,24 @@ class CloudflareOptimizer:
             return
         
         try:
-            with open(result_file, "r") as f:
-                # 跳过标题行    # 确保正确读取 result_file
-                f.readline()
+            with open(result_file, "r", encoding='utf-8') as f:
+                headers = [h.strip() for h in f.readline().strip().split(',')]
                 best_line = f.readline()
                 if not best_line:
                     self.logger.warning("结果文件为空，无法记录最优IP")
                     return
                 
-                # 解析最优IP信息
-                parts = best_line.strip().split(',')
-                if len(parts) < 6:
+                values = best_line.strip().split(',')
+                if len(values) < len(headers):
                     self.logger.warning(f"结果行格式错误: {best_line}")
                     return
                 
-                ip = parts[0]
-                latency = parts[1]
-                jitter = parts[2]
-                loss = parts[3]
-                speed = parts[4] if len(parts) > 4 else "N/A"
+                result_dict = dict(zip(headers, values))
+                ip = result_dict.get("IP 地址", "N/A")
+                latency = result_dict.get("平均延迟", "N/A")
+                jitter = result_dict.get("延迟抖动", "N/A")
+                loss = result_dict.get("丢包率", "N/A")
+                speed = result_dict.get("下载速度", "N/A")
                 
                 # 记录到日志
                 log_msg = (
