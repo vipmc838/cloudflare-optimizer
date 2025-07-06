@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 class ConfigLoader:
-    def __init__(self, config_path="config/config.ini"):
+    def __init__(self, config_path="/app/config/config.ini"):
         self.config_path = Path(config_path)
         self.config = configparser.ConfigParser()
         self.load_config()
@@ -11,9 +11,24 @@ class ConfigLoader:
     def load_config(self):
         if not self.config_path.exists():
             self.create_default_config()
-        self.config.read(self.config_path)
+        self.config.read(self.config_path, encoding='utf-8')
     
     def create_default_config(self):
+        # 路径配置
+        self.config['paths'] = {
+            'data_dir': '/app/data',
+            'log_dir': '/app/log',
+            'static_dir': '/app/static',
+            'config_dir': '/app/config',
+            'log_file': '/app/log/cf.log',
+            'ipv4_file': '/app/data/ip.txt',
+            'ipv6_file': '/app/data/ipv6.txt',
+            'result_file': '/app/data/result.csv',
+            # 根据系统自动判断，但在容器中通常是无后缀的
+            'binary_file': '/app/data/CloudflareST'
+        }
+
+        # CloudflareST 工具参数配置
         self.config['cloudflare'] = {
             'n': '200',
             't': '4',
@@ -29,13 +44,12 @@ class ConfigLoader:
             'tlr': '0.2',
             'sl': '5',
             'p': '10',
-            'f': 'data/ip.txt',
             'ip': '',
-            'o': 'data/result.csv',
+            'o': self.config.get('paths', 'result_file'),
             'dd': 'true',
             'allip': 'false',
             'debug': 'false',
-            'cron': '0 */12 * * *',
+            'cron': '0 */3 * * *',
             'ipv4': 'true',
             'ipv6': 'false',
             're_install': 'false',
@@ -44,7 +58,7 @@ class ConfigLoader:
             'api_key': '12345678'
         }
         os.makedirs(self.config_path.parent, exist_ok=True)
-        with open(self.config_path, 'w') as f:
+        with open(self.config_path, 'w', encoding='utf-8') as f:
             self.config.write(f)
     
     def get(self, section, key, fallback=None):
@@ -79,7 +93,7 @@ class ConfigLoader:
                 args[key] = value
         
         # 字符串参数
-        str_keys = ['url', 'httping_code', 'cfcolo', 'f', 'ip', 'o']
+        str_keys = ['url', 'httping_code', 'cfcolo', 'ip', 'o']
         for key in str_keys:
             value = self.get(section, key)
             if value:
