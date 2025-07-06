@@ -14,7 +14,7 @@
 
 ### 使用Docker运行
 
-```bash
+```docker-cli
 docker run -d \
   --name cf-optimizer \
   -p 6788:6788 \
@@ -22,8 +22,10 @@ docker run -d \
   -v $(pwd)/log:/app/log \
   -v $(pwd)/config:/app/config \
   yourusername/cloudflare-ip-optimizer:latest
+```
 
-```bash
+### 使用Docker-Compose运行
+```docker-compose
 version: '3.8'
 
 services:
@@ -37,3 +39,4 @@ services:
       - ./data:/app/data
       - ./log:/app/log
       - ./config:/app/config
+```
