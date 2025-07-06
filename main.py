@@ -10,10 +10,10 @@ from src.api_server import app
 
 def setup_logging():
     """配置日志系统"""
-    # 创建日志目录
-    log_dir = Path("log")
+    # 从配置中读取日志文件路径
+    log_file = Path(config.get('paths', 'log_file', fallback='/app/log/cf.log'))
+    log_dir = log_file.parent
     log_dir.mkdir(exist_ok=True, parents=True)
-    log_file = log_dir / "cf.log"
     
     # 创建根日志记录器
     logger = logging.getLogger()
@@ -60,9 +60,11 @@ if __name__ == "__main__":
     
     logger.info("Starting Cloudflare IP Optimizer")
     
-    # 确保目录存在
-    Path("data").mkdir(exist_ok=True, parents=True)
-    Path("log").mkdir(exist_ok=True, parents=True)
+    # 根据配置创建所需目录
+    data_dir = Path(config.get('paths', 'data_dir', fallback='/app/data'))
+    log_dir = Path(config.get('paths', 'log_dir', fallback='/app/log'))
+    data_dir.mkdir(exist_ok=True, parents=True)
+    log_dir.mkdir(exist_ok=True, parents=True)
     
     try:
         # 启动调度器
