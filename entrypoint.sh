@@ -10,7 +10,7 @@ echo "Initializing container with UID: $PUID, GID: $PGID"
 
 # 获取容器内预设用户 appuser 的当前 UID 和 GID
 CURRENT_UID=$(id -u appuser)
-CURRENT_GID=$(id -g appgroup)
+CURRENT_GID=$(id -g appuser)
 
 # 当传入的 PGID 与容器内 GID 不一致时，修改组的 GID
 if [ "$PGID" != "$CURRENT_GID" ]; then
