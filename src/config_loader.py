@@ -30,23 +30,24 @@ class ConfigLoader:
 
         # CloudflareST 工具参数配置
         self.config['cloudflare'] = {
+            # 以下参数留空，以使用 CloudflareST 的默认值
             'n': '200',
             't': '4',
-            'dn': '10',
+            'dn': '1',
             'dt': '10',
-            'tp': '443',
-            'url': 'https://cf.xiu2.xyz/url',
+            'tp': '',
+            'url': '',
             'httping': 'false',
-            'httping_code': '200',
-            'cfcolo': 'HKG,KHH,NRT,LAX,SEA,SJC,FRA,MAD',
+            'httping_code': '',
+            'cfcolo': '',
             'tl': '200',
             'tll': '40',
-            'tlr': '0.2',
-            'sl': '5',
-            'p': '10',
+            'tlr': '',
+            'sl': '12',
+            'p': '',
             'ip': '',
             'o': self.config.get('paths', 'result_file'),
-            'dd': 'true',
+            'dd': 'true', # 默认不禁用下载测速
             'allip': 'false',
             'debug': 'false',
             'cron': '0 */3 * * *',
@@ -81,16 +82,23 @@ class ConfigLoader:
         # 数值参数
         num_keys = ['n', 't', 'dn', 'dt', 'tp', 'p', 'tl', 'tll', 'sl']
         for key in num_keys:
-            value = self.getint(section, key)
-            if value is not None:
-                args[key] = value
+            value_str = self.get(section, key)
+            if value_str: # 只有在值不为空时才处理
+                try:
+                    args[key] = int(value_str)
+                except (ValueError, TypeError):
+                    # 如果值无法转换为整数，则忽略
+                    pass
         
         # 浮点数参数
         float_keys = ['tlr']
         for key in float_keys:
-            value = self.getfloat(section, key)
-            if value is not None:
-                args[key] = value
+            value_str = self.get(section, key)
+            if value_str: # 只有在值不为空时才处理
+                try:
+                    args[key] = float(value_str)
+                except (ValueError, TypeError):
+                    pass
         
         # 字符串参数
         str_keys = ['url', 'httping_code', 'cfcolo', 'ip', 'o']
