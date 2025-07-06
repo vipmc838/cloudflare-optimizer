@@ -149,7 +149,7 @@ class CloudflareOptimizer:
         # 执行命令
         try:
             process = subprocess.Popen(
-               cmd,
+                cmd,
                 cwd=self.data_dir,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -166,12 +166,6 @@ class CloudflareOptimizer:
                     output_lines.append(line.strip())
                     self.logger.info(line.strip())
             
-            # 检查进程退出状态
-            if process.returncode != 0:
-                error_msg = f"CloudflareST exited with code {process.returncode}: {' '.join(process.stderr.readlines())}"
-                self.logger.error(error_msg)
-                raise subprocess.CalledProcessError(process.returncode, cmd, stderr=error_msg)
-
             # 获取结果文件路径
             result_file = Path(args.get('o', 'data/result.csv'))
             
@@ -179,9 +173,6 @@ class CloudflareOptimizer:
             self.log_best_ip(result_file)
             
             return result_file
-
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"CloudflareST execution failed: {e}")
         except Exception as e:
             self.logger.error(f"Optimization failed: {str(e)}")
             return None
