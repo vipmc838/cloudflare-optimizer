@@ -32,16 +32,16 @@ class ConfigLoader:
             'f': 'data/ip.txt',
             'ip': '',
             'o': 'data/result.csv',
-            'dd': 'false',
+            'dd': 'true',
             'allip': 'false',
             'debug': 'false',
-            'cron': '0 0 */12 * * *',
+            'cron': '0 */12 * * *',
             'ipv4': 'true',
             'ipv6': 'false',
             're_install': 'false',
             'proxy': '',
             'api_port': '6788',
-            'api_key': 'your-secret-key'
+            'api_key': '12345678'
         }
         os.makedirs(self.config_path.parent, exist_ok=True)
         with open(self.config_path, 'w') as f:
