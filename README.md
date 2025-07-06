@@ -2,6 +2,13 @@
 
 🌩 自动测试 Cloudflare CDN 延迟和速度，自动优选最佳IP地址，并提供API接口。
 
+## 特别感谢
+
+XIU2大佬的[cloudflare优选IP](https://github.com/XIU2/CloudflareSpeedTest?tab=readme-ov-file)项目
+
+thsrite大佬的[Cloudflare IP优选](https://github.com/jxxghp/MoviePilot-Plugins/blob/main/plugins/cloudflarespeedtest)插件项目
+
+
 ## 功能特性
 
 - 定时自动优选Cloudflare IP
