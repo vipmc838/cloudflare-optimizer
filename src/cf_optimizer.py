@@ -147,7 +147,7 @@ class CloudflareOptimizer:
             cmd.extend(["-f", ipv6_file])
         
         # 显式处理输出文件 -o (使用绝对路径)
-        result_file = Path(args.get('o', config.get('paths', 'result_file')))
+        result_file = Path(args.get('o', config.get('paths', 'result_file')))  # 确保正确使用了配置中的 result_file
         cmd.extend(["-o", str(result_file)])
         
         self.logger.info(f"Running command: {' '.join(cmd)}")
@@ -156,7 +156,7 @@ class CloudflareOptimizer:
         try:
             # 使用 subprocess.run 等待命令完成并捕获输出
             process = subprocess.run(
-                cmd,
+                cmd,  # 确保 CloudflareST 工具路径正确
                 cwd=self.data_dir,
                 capture_output=True,
                 text=True,
@@ -210,7 +210,7 @@ class CloudflareOptimizer:
         
         try:
             with open(result_file, "r") as f:
-                # 跳过标题行
+                # 跳过标题行    # 确保正确读取 result_file
                 f.readline()
                 best_line = f.readline()
                 if not best_line:
