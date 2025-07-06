@@ -22,3 +22,18 @@ docker run -d \
   -v $(pwd)/log:/app/log \
   -v $(pwd)/config:/app/config \
   yourusername/cloudflare-ip-optimizer:latest
+
+```bash
+version: '3.8'
+
+services:
+  cf-optimizer:
+    image: yourusername/cloudflare-ip-optimizer:latest
+    container_name: cf-ip-optimizer
+    restart: unless-stopped
+    ports:
+      - "6788:6788"
+    volumes:
+      - ./data:/app/data
+      - ./log:/app/log
+      - ./config:/app/config
