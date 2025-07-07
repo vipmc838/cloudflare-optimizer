@@ -2,6 +2,7 @@ import logging
 import threading
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
+import os
 import uvicorn
 
 from src.config_loader import config
@@ -9,9 +10,11 @@ from src.scheduler import TaskScheduler
 from src.api_server import app
 
 def setup_logging():
-    """配置日志系统"""
+    """配置日志系统，确保日志文件可写"""
     # 从配置中读取日志文件路径
-    log_file = Path(config.get('paths', 'log_file', fallback='/app/log/cf.log'))
+    # 这是配置日志文件的唯一真实来源
+    log_file_path = config.get('paths', 'log_file', fallback='/app/log/cf.log')
+    log_file = Path(log_file_path)
     log_dir = log_file.parent
     
     # 创建根日志记录器
@@ -30,18 +33,32 @@ def setup_logging():
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     
-    # 尝试配置日志文件处理器，如果失败则在控制台打印错误
+    # 尝试配置日志文件处理器，并进行详细的权限检查
     try:
+        # 步骤 1: 确保日志目录存在。如果创建失败，会抛出异常。
         log_dir.mkdir(exist_ok=True, parents=True)
+        
+        # 步骤 2: 显式地创建日志文件（如果不存在）。
+        # 这有助于在配置处理器之前就发现权限问题。
+        if not log_file.exists():
+            log_file.touch()
+            
+        # 步骤 3: 检查文件是否真正可写。
+        if not os.access(log_file, os.W_OK):
+            # 如果不可写，抛出明确的权限错误。
+            raise PermissionError(f"日志文件 '{log_file}' 不可写，请检查文件权限。")
+
+        # 步骤 4: 配置 TimedRotatingFileHandler
+        # 使用 utf-8 编码以避免乱码问题
         file_handler = TimedRotatingFileHandler(
-            log_file, when="midnight", interval=1, backupCount=7
+            log_file, when="midnight", interval=1, backupCount=7, encoding='utf-8'
         )
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     except Exception as e:
         # 如果文件处理器创建失败，在控制台记录一个明确的错误，这对于诊断Docker权限问题至关重要
-        logger.error(f"无法创建或写入日志文件 at '{log_file}'. 请检查路径和容器权限。错误: {e}")
+        logger.error(f"无法配置日志文件处理器 at '{log_file}'. 请检查路径和容器权限。错误: {e}")
     
     # 记录启动信息
     logger.info("=" * 60)
