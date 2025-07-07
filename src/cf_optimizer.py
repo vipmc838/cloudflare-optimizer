@@ -170,11 +170,25 @@ class CloudflareOptimizer:
         else:
             result_file = Path(config.get('paths', 'result_file'))
         
-        self.logger.info(f"Running command: {' '.join(cmd)}")
+        # 在执行前，检查结果文件是否存在，如果存在则先删除
+        # 这可以避免使用上一次运行的旧结果
+        if result_file.exists():
+            self.logger.info(f"Removing old result file: {result_file}")
+            try:
+                os.remove(result_file)
+            except OSError as e:
+                self.logger.error(f"Failed to remove old result file: {e}")
+                return None
+
+        self.logger.info(f"Executing command: {' '.join(cmd)}")
+        
+        # 从配置中获取超时时间
+        timeout_seconds = config.getint('cloudflare', 'optimization_timeout', fallback=600)
+        self.logger.info(f"Task timeout is set to {timeout_seconds} seconds.")
         
         # 执行命令
         try:
-            # 使用 Popen 实时捕获和打印输出，确保日志逐步生成
+            # 使用 Popen 和 communicate 来安全地处理子进程，并支持超时
             process = subprocess.Popen(
                 cmd,
                 cwd=self.data_dir,
@@ -182,48 +196,48 @@ class CloudflareOptimizer:
                 stderr=subprocess.PIPE,
                 text=True,
                 encoding='utf-8',
-                errors='ignore',
-                bufsize=1  # 行缓冲
+                errors='ignore'
             )
 
-            # 实时读取标准输出并记录
-            if process.stdout:  # 确保 process.stdout 不为 None
-                for line in iter(process.stdout.readline, ''):
-                    # 移除行尾的换行符并记录，这样每条日志都会有自己的时间戳
-                    self.logger.info(line.strip())
-                process.stdout.close()
+            # communicate 会等待进程结束，并一次性返回所有输出，同时处理超时
+            stdout_output, stderr_output = process.communicate(timeout=timeout_seconds)
+            
+            # 记录标准输出
+            self.logger.info("--- CloudflareST stdout ---")
+            for line in stdout_output.strip().split('\n'):
+                if line: self.logger.info(line)
+            self.logger.info("--- End of stdout ---")
 
-            # 等待进程结束
-            return_code = process.wait()
-            self.logger.info(f"CloudflareST exited with code: {return_code}")  # 记录退出代码
+            # 记录标准错误
+            if stderr_output.strip():
+                self.logger.warning("--- CloudflareST stderr ---")
+                for line in stderr_output.strip().split('\n'):
+                    if line: self.logger.warning(line)
+                self.logger.warning("--- End of stderr ---")
 
-            # 读取可能存在的标准错误输出
-            if process.stderr:  # 确保 process.stderr 不为 None
-                stderr_output = process.stderr.read()
-                if stderr_output:
-                    self.logger.warning("CloudflareST stderr:")
-                    for line in stderr_output.strip().split('\n'):
-                        self.logger.warning(line)
-                process.stderr.close()
-            else:
-                self.logger.info("CloudflareST stderr: <empty>")  # 如果 stderr 为空，记录信息
+            # 检查进程退出代码
+            if process.returncode != 0:
+                self.logger.error(f"CloudflareST process exited with error code {process.returncode}. Check logs for details.")
+                return None
 
-            if return_code != 0:
-                error_message = f"CloudflareST failed (exit code: {return_code}). Check logs above for details."
-                self.logger.error(error_message)
-                # 抛出异常，让调用者也能感知到错误
-                raise subprocess.CalledProcessError(return_code, cmd, stderr=stderr_output)
+            # 【关键检查】即使进程成功退出，也要确认结果文件是否已生成
+            if not result_file.exists():
+                self.logger.error("Optimization process completed, but the result file was not generated.")
+                self.logger.error("This usually means no IPs met the criteria. Check your filter parameters (tl, sl, etc.) and the CloudflareST output above.")
+                return None
 
             # 记录最优IP
             self.log_best_ip(result_file)
             
             return result_file
+        except subprocess.TimeoutExpired:
+            self.logger.error(f"CloudflareST process timed out after {timeout_seconds} seconds. The process has been terminated.")
+            process.kill()
+            process.communicate() # 清理管道
+            return None
         except FileNotFoundError:
             self.logger.error(f"命令执行失败: 未找到 CloudflareST 工具 at '{self.binary_path}'. 请检查路径或重新安装。")
             return None
-        except subprocess.CalledProcessError as e:
-            # 捕获子进程异常，记录更详细的错误信息
-            self.logger.error(f"CloudflareST execution error: {e}")
         except Exception as e:
             self.logger.error(f"Optimization failed: {str(e)}")
             return None
