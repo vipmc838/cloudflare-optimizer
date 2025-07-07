@@ -154,29 +154,48 @@ class CloudflareOptimizer:
         
         # 执行命令
         try:
-            # 使用 subprocess.run 等待命令完成并捕获输出
-            process = subprocess.run(
-                cmd,  # 确保 CloudflareST 工具路径正确
+            # 使用 Popen 实时捕获和打印输出，确保日志逐步生成
+            process = subprocess.Popen(
+                cmd,
                 cwd=self.data_dir,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
                 encoding='utf-8',
-                errors='ignore'
+                errors='ignore',
+                bufsize=1  # 行缓冲
             )
-            
-            # 记录 CloudflareST 的标准输出和错误输出
+
+            # 实时读取标准输出并记录
             if process.stdout:
-                for line in process.stdout.strip().split('\n'):
-                    self.logger.info(line)
+                for line in iter(process.stdout.readline, ''):
+                    # 移除行尾的换行符并记录，这样每条日志都会有自己的时间戳
+                    self.logger.info(line.strip())
+                process.stdout.close()
+
+            # 等待进程结束
+            return_code = process.wait()
+
+            # 读取可能存在的标准错误输出
             if process.stderr:
-                self.logger.warning("CloudflareST stderr:")
-                for line in process.stderr.strip().split('\n'):
-                    self.logger.warning(line)
-            
+                stderr_output = process.stderr.read()
+                if stderr_output:
+                    self.logger.warning("CloudflareST stderr:")
+                    for line in stderr_output.strip().split('\n'):
+                        self.logger.warning(line)
+                process.stderr.close()
+
+            if return_code != 0:
+                self.logger.error(f"CloudflareST process exited with error code {return_code}")
+                return None
+
             # 记录最优IP
             self.log_best_ip(result_file)
             
             return result_file
+        except FileNotFoundError:
+            self.logger.error(f"命令执行失败: 未找到 CloudflareST 工具 at '{self.binary_path}'. 请检查路径或重新安装。")
+            return None
         except Exception as e:
             self.logger.error(f"Optimization failed: {str(e)}")
             return None
