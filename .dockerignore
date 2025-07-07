@@ -8,6 +8,6 @@ __pycache__
 *.pyd
 env/
 venv/
-log/
+logs/
 data/
 config/
