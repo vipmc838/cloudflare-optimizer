@@ -17,7 +17,7 @@ config/config.ini
 !data/ipv6.txt
 
 # Logs
-log/
+logs/
 
 # IDE
 .vscode/
