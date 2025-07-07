@@ -1,105 +1,128 @@
-import logging
-import threading
-from logging.handlers import TimedRotatingFileHandler
-from pathlib import Path
+import configparser
 import os
-import uvicorn
+from pathlib import Path
 
-from src.config_loader import config
-from src.scheduler import TaskScheduler
-from src.api_server import app
+class ConfigLoader:
+    def __init__(self, config_path="/app/config/config.ini"):
+        self.config_path = Path(config_path)
+        self.config = configparser.ConfigParser()
+        self.load_config()
+    
+    def load_config(self):
+        if not self.config_path.exists():
+            self.create_default_config()
+        self.config.read(self.config_path, encoding='utf-8')
+    
+    def create_default_config(self):
+        # 路径配置
+        self.config['paths'] = {
+            'data_dir': '/app/data',
+            'log_dir': '/app/log',
+            'static_dir': '/app/static',
+            'config_dir': '/app/config',
+            'log_file': '/app/logs/cf.log',
+            'ipv4_file': '/app/data/ip.txt',
+            'ipv6_file': '/app/data/ipv6.txt',
+            'result_file': '/app/data/result.csv',
+            # 根据系统自动判断，但在容器中通常是无后缀的
+            'binary_file': '/app/data/CloudflareST'
+        }
 
-def setup_logging():
-    """配置日志系统，确保日志文件可写"""
-    # 从配置中读取日志文件路径
-    # 这是配置日志文件的唯一真实来源
-    log_file_path = config.get('paths', 'log_file', fallback='/app/log/cf.log')
-    log_file = Path(log_file_path)
-    log_dir = log_file.parent
+        # CloudflareST 工具参数配置
+        self.config['cloudflare'] = {
+            # 以下参数留空，以使用 CloudflareST 的默认值
+            'n': '200',
+            't': '4',
+            'dn': '1',
+            'dt': '10',
+            'tp': '',
+            'url': '',
+            'httping': 'false',
+            'httping_code': '',
+            'cfcolo': '',
+            'tl': '200',
+            'tll': '40',
+            'tlr': '',
+            'sl': '12',
+            'p': '',
+            'ip': '',
+            'o': self.config.get('paths', 'result_file'),
+            'dd': 'true', # 默认不禁用下载测速
+            'allip': 'false',
+            'debug': 'false',
+            'cron': '0 */3 * * *',
+            'ipv4': 'true',
+            'ipv6': 'false',
+            're_install': 'false',
+            'proxy': '',
+            'api_port': '6788',
+            'api_key': '12345678'
+        }
+        os.makedirs(self.config_path.parent, exist_ok=True)
+        with open(self.config_path, 'w', encoding='utf-8') as f:
+            self.config.write(f)
     
-    # 创建根日志记录器
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    def get(self, section, key, fallback=None):
+        return self.config.get(section, key, fallback=fallback)
     
-    # 创建日志格式
-    formatter = logging.Formatter(
-        "[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
-
-    # 总是先配置控制台处理器，以便能看到所有启动和错误信息
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+    def getboolean(self, section, key, fallback=False):
+        return self.config.getboolean(section, key, fallback=fallback)
     
-    # 尝试配置日志文件处理器，并进行详细的权限检查
-    try:
-        # 步骤 1: 确保日志目录存在。如果创建失败，会抛出异常。
-        logger.info(f"检查日志目录: {log_dir}")
-        log_dir.mkdir(exist_ok=True, parents=True)
+    def getint(self, section, key, fallback=0):
+        return self.config.getint(section, key, fallback=fallback)
+    
+    def getfloat(self, section, key, fallback=0.0):
+        return self.config.getfloat(section, key, fallback=fallback)
+    
+    def get_args_dict(self):
+        """获取优选参数字典"""
+        args = {}
+        section = 'cloudflare'
         
-        # 步骤 2: 显式地创建日志文件（如果不存在）。
-        # 这有助于在配置处理器之前就发现权限问题。
-        if not log_file.exists():
-            logger.info(f"日志文件 '{log_file}' 不存在，正在创建...")
-            log_file.touch()
-        else:
-            logger.info(f"日志文件 '{log_file}' 已存在。")
-            
-        # 步骤 3: 检查文件是否真正可写。
-        if not os.access(log_file, os.W_OK):
-            # 如果不可写，抛出明确的权限错误。
-            raise PermissionError(f"日志文件 '{log_file}' 不可写，请检查文件权限。")
+        # 数值参数
+        num_keys = ['n', 't', 'dn', 'dt', 'tp', 'p', 'tl', 'tll', 'sl']
+        for key in num_keys:
+            value_str = self.get(section, key)
+            if value_str: # 只有在值不为空时才处理
+                try:
+                    args[key] = int(value_str)
+                except (ValueError, TypeError):
+                    # 如果值无法转换为整数，则忽略
+                    pass
         
-        logger.info(f"日志文件 '{log_file}' 权限检查通过。")
-
-        # 步骤 4: 配置 TimedRotatingFileHandler
-        # 使用 utf-8 编码以避免乱码问题
-        file_handler = TimedRotatingFileHandler(
-            log_file, when="midnight", interval=1, backupCount=7, encoding='utf-8'
-        )
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-        logger.info(f"日志文件处理器配置成功，日志将写入: {log_file}")
-    except Exception as e:
-        # 如果文件处理器创建失败，在控制台记录一个明确的错误，这对于诊断Docker权限问题至关重要
-        logger.error(f"无法配置日志文件处理器 at '{log_file}'. 请检查路径和容器权限。错误: {e}")
-    
-    # 记录启动信息
-    logger.info("=" * 60)
-    logger.info("Cloudflare IP Optimizer 服务启动")
-    logger.info("=" * 60)
-
-def start_api_server():
-    """启动API服务器"""
-    port = config.getint('cloudflare', 'api_port', fallback=6788)
-    logger = logging.getLogger("main")
-    logger.info(f"Starting API server on port {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port)
-
-if __name__ == "__main__":
-    # 配置日志
-    setup_logging()
-    logger = logging.getLogger("main")
-    
-    logger.info("Starting Cloudflare IP Optimizer")
-    
-    # 根据配置创建所需目录
-    data_dir = Path(config.get('paths', 'data_dir', fallback='/app/data'))
-    data_dir.mkdir(exist_ok=True, parents=True)
-    # 日志目录的创建已在 setup_logging() 函数中处理，此处无需重复
-    
-    try:
-        # 启动调度器
-        scheduler = TaskScheduler()
-        scheduler_thread = threading.Thread(target=scheduler.start)
-        scheduler_thread.daemon = True
-        scheduler_thread.start()
+        # 浮点数参数
+        float_keys = ['tlr']
+        for key in float_keys:
+            value_str = self.get(section, key)
+            if value_str: # 只有在值不为空时才处理
+                try:
+                    args[key] = float(value_str)
+                except (ValueError, TypeError):
+                    pass
         
-        # 启动API服务器
-        start_api_server()
-    except Exception as e:
-        logger.error(f"服务启动失败: {str(e)}")
-        raise
+        # 字符串参数
+        str_keys = ['url', 'httping_code', 'cfcolo', 'ip', 'o']
+        for key in str_keys:
+            value = self.get(section, key)
+            if value:
+                args[key] = value
+        
+        # 布尔参数
+        bool_keys = ['httping', 'dd', 'allip', 'debug', 'ipv4', 'ipv6', 're_install']
+        for key in bool_keys:
+            # 直接调用 getboolean 会在值为空字符串时报错。
+            # 我们需要先获取字符串，如果为空则视为 False，否则再进行转换。
+            value_str = self.get(section, key)
+            if value_str and value_str.lower() in ('true', '1', 'yes', 'on'):
+                args[key] = True
+            else:
+                # 任何其他值（包括空字符串）都将被视为 False
+                args[key] = False
+        
+        # 安全处理API密钥
+        if 'api_key' in args:
+            args['api_key'] = "******"
+        
+        return args
+
+config = ConfigLoader()
