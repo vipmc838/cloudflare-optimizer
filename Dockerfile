@@ -8,6 +8,11 @@ ENV PYTHONUNBUFFERED 1
 # 设置工作目录
 WORKDIR /app
 
+# 安装系统依赖 (ping)
+# slim 镜像默认不包含 ping 工具，需要手动安装
+RUN apt-get update && apt-get install -y iputils-ping && \
+    rm -rf /var/lib/apt/lists/*
+
 # 安装依赖
 # 先只复制 requirements.txt 文件，这样可以利用 Docker 的层缓存机制
 # 只有当依赖变化时，才会重新执行 pip install
