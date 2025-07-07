@@ -26,8 +26,8 @@ fi
 
 # 授予对应用、数据、日志和配置目录的所有权
 # 这样，当您挂载主机目录时，容器内的用户将具有正确的写入权限
-echo "Taking ownership of /app, /app/data, /app/log, /app/config..."
-chown -R appuser:appgroup /app/data /app/log /app/config
+echo "Taking ownership of /app, /data, /log, /config..."
+chown -R appuser:appgroup /app /data /logs /config
 
 # 使用 gosu 切换到 appuser 用户，并执行 Dockerfile 的 CMD 中定义的命令 (即 "$@")
 echo "Executing command as appuser: $@"
