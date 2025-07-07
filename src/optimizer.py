@@ -4,6 +4,7 @@ import sys
 import platform
 import requests
 import zipfile
+import tarfile
 import subprocess
 import logging
 import csv
@@ -104,23 +105,30 @@ class CloudflareOptimizer:
         
         try:
             url = self._get_download_url()
-            zip_path = os.path.join(self.tool_dir, "CloudflareST.zip")
+            archive_filename = url.split('/')[-1]
+            archive_path = os.path.join(self.tool_dir, archive_filename)
 
             # 下载
             with requests.get(url, stream=True, timeout=30) as r:
                 r.raise_for_status()
-                with open(zip_path, 'wb') as f:
+                with open(archive_path, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=8192):
                         f.write(chunk)
             
             logging.info("下载完成，开始解压...")
             
             # 解压
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(self.tool_dir)
+            if archive_filename.endswith('.zip'):
+                with zipfile.ZipFile(archive_path, 'r') as zip_ref:
+                    zip_ref.extractall(self.tool_dir)
+            elif archive_filename.endswith(('.tar.gz', '.tgz')):
+                with tarfile.open(archive_path, 'r:gz') as tar_ref:
+                    tar_ref.extractall(self.tool_dir)
+            else:
+                raise ValueError(f"不支持的压缩文件格式: {archive_filename}")
             
             # 清理压缩包
-            os.remove(zip_path)
+            os.remove(archive_path)
             
             # 添加执行权限 (Linux/macOS)
             if sys.platform != "win32":
