@@ -23,7 +23,3 @@ logs/
 .vscode/
 .idea/
 .DS_Store
-
-# Docker
-Dockerfile
-.dockerignore
