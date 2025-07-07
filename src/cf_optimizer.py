@@ -161,9 +161,14 @@ class CloudflareOptimizer:
         if args.get('ipv6'):
             cmd.extend(["-f", ipv6_file])
         
-        # 显式处理输出文件 -o (使用绝对路径)
-        result_file = Path(args.get('o', config.get('paths', 'result_file')))  # 确保正确使用了配置中的 result_file
-        cmd.extend(["-o"， 'str(result_file)'])
+        # 处理输出文件 -o。如果用户在 config.ini 中设置了 'o'，则使用它。
+        # 否则，不添加 -o 参数，让 CloudflareST 使用默认的 result.csv。
+        output_path_str = args.get('o')
+        if output_path_str:
+            result_file = Path(output_path_str)
+            cmd.extend(["-o", str(result_file)])
+        else:
+            result_file = Path(config.get('paths', 'result_file'))
         
         self.logger.info(f"Running command: {' '.join(cmd)}")
         
