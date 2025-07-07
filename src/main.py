@@ -62,11 +62,22 @@ def main() -> None:
         logging.warning(f"配置文件未找到: {CONFIG_FILE_PATH}，将使用默认配置并创建文件。")
         config = configparser.ConfigParser()
         config['CloudflareSpeedTest'] = {
-            'params': '-p 0 -o result.csv -url https://cf.xiu2.xyz/url -dn 10 -t 2 '
+            'params': '-p 0 -o result.csv -url https://cf.xiu2.xyz/url -tl 200 -tll 40 -t 4 -dt 10 -dn 1 -dd'
         }
         config['Scheduler'] = {
             'optimize_cron': '0 3 * * *',
             'heartbeat_cron': '*/5 * * * *'
+        }
+        config['OpenWRT'] = {
+            'enabled': 'false',
+            'host': '192.168.1.1',
+            'port': '22',
+            'username': 'root',
+            'password': 'your_password',
+            'target': 'openwrt',
+            'openwrt_hosts_path': '/etc/hosts',
+            'mosdns_hosts_path': '/etc/mosdns/rule/hosts.txt',
+            'post_update_command': ''
         }
         config['API'] = {'port': 6788}
         with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as configfile:
