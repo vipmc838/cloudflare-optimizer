@@ -46,7 +46,7 @@ class ConfigLoader:
             'sl': '12',
             'p': '',
             'ip': '',
-            'o': self.config.get('paths', 'result_file'),
+            'o': '',
             'dd': 'true', # 默认不禁用下载测速
             'allip': 'false',
             'debug': 'false',
