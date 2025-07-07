@@ -17,10 +17,10 @@ class ConfigLoader:
         # 路径配置
         self.config['paths'] = {
             'data_dir': '/app/data',
-            'log_dir': '/app/log',
+            'log_dir': '/app/logs',
             'static_dir': '/app/static',
             'config_dir': '/app/config',
-            'log_file': '/app/log/cf.log',
+            'log_file': '/app/logs/cf.log',
             'ipv4_file': '/app/data/ip.txt',
             'ipv6_file': '/app/data/ipv6.txt',
             'result_file': '/app/data/result.csv',
