@@ -62,7 +62,7 @@ def main() -> None:
         logging.warning(f"配置文件未找到: {CONFIG_FILE_PATH}，将使用默认配置并创建文件。")
         config = configparser.ConfigParser()
         config['CloudflareSpeedTest'] = {
-            'params': '-p 0 -o result.csv -url https://cf.xiu2.xyz/url -tl 200 -tll 40 -t 4 -dt 10 -dn 1 -dd'
+            'params': '-p 0 -o result.csv -url https://cf.xiu2.xyz/url -dn 10 -t 2 '
         }
         config['Scheduler'] = {
             'optimize_cron': '0 3 * * *',
