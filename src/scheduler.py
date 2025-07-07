@@ -37,9 +37,6 @@ class TaskScheduler:
         else:
             self.logger.info("Heartbeat service is disabled.")
             
-        # 立即运行一次
-        self.run_optimization_task()
-        
         self.scheduler.start()
         self.logger.info("Scheduler started")
 
