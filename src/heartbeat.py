@@ -16,11 +16,11 @@ def check_best_ip(optimizer_instance):
 
     # 根据不同操作系统构造 ping 命令
     # -c 1 (Linux/macOS) / -n 1 (Windows): 发送1个包
-    # -W 2 (Linux) / -w 2000 (Windows): 超时2秒
+    # -W 5 (Linux) / -w 5000 (Windows): 超时5秒，增加超时以应对网络波动
     if sys.platform == "win32":
-        command = ["ping", "-n", "1", "-w", "2000", app_state.best_ip]
+        command = ["ping", "-n", "1", "-w", "5000", app_state.best_ip]
     else:
-        command = ["ping", "-c", "1", "-W", "2", app_state.best_ip]
+        command = ["ping", "-c", "1", "-W", "5", app_state.best_ip]
 
     try:
         # 使用 subprocess.run 来执行命令，并隐藏输出
