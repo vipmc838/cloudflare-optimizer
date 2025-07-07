@@ -9,6 +9,9 @@ from src.config_loader import config
 from src.scheduler import TaskScheduler
 from src.api_server import app
 
+# 全局调度器实例
+scheduler = TaskScheduler()
+
 def setup_logging():
     """配置日志系统，确保日志文件可写"""
     # 从配置中读取日志文件路径
@@ -72,6 +75,11 @@ def setup_logging():
     logger.info("Cloudflare IP Optimizer 服务启动")
     logger.info("=" * 60)
 
+@app.on_event("shutdown")
+def shutdown_event():
+    logger.info("服务正在关闭，停止调度器...")
+    scheduler.shutdown()
+
 def start_api_server():
     """启动API服务器"""
     port = config.getint('cloudflare', 'api_port', fallback=6788)
@@ -93,8 +101,7 @@ if __name__ == "__main__":
     
     try:
         # 启动调度器
-        scheduler = TaskScheduler()
-        scheduler_thread = threading.Thread(target=scheduler.start)
+        scheduler_thread = threading.Thread(target=scheduler.start, name="SchedulerThread")
         scheduler_thread.daemon = True
         scheduler_thread.start()
         
