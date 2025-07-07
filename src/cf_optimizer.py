@@ -274,7 +274,7 @@ class CloudflareOptimizer:
                 headers = [h.strip() for h in f.readline().strip().split(',')]
                 best_line = f.readline()
                 if not best_line:
-                    self.logger.warning("结果文件为空，无法记录最优IP")
+                    self.logger.warning("优选结果为空（result.csv 文件没有有效数据），请检查 CloudflareST 工具的输出和配置参数。")
                     return
                 
                 values = best_line.strip().split(',')
