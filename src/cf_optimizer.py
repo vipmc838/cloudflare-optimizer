@@ -161,14 +161,10 @@ class CloudflareOptimizer:
         if args.get('ipv6'):
             cmd.extend(["-f", ipv6_file])
         
-        # 处理输出文件 -o。如果用户在 config.ini 中设置了 'o'，则使用它。
-        # 否则，不添加 -o 参数，让 CloudflareST 使用默认的 result.csv。
-        output_path_str = args.get('o')
-        if output_path_str:
-             result_file = Path(output_path_str)
-             cmd.extend(["-o", str(result_file)])
-        else:
-            result_file = Path(config.get('paths', 'result_file'))
+
+        result_file = config.get('paths', 'result_file')
+        cmd.extend(["-o", result_file])
+
         
         # 在执行前，检查结果文件是否存在，如果存在则先删除
         # 这可以避免使用上一次运行的旧结果
