@@ -268,19 +268,25 @@ def dashboard():
 
 @app.get("/run", dependencies=[Depends(get_api_key)])
 def run_optimization():
-    """手动触发优选"""
-    logger.info("Manual optimization triggered via API")
-    result_file = cf_optimizer.run_optimization()
-    if result_file:
-        return {
-            "status": "success",
-            "message": "Optimization completed",
-            "result_file": str(result_file)
-        }
-    return {
-        "status": "error",
-        "message": "Optimization failed"
-    }
+    """手动触发优选，使用后台线程执行"""
+    logger.info("手动触发优选 (API)")
+    
+    def optimization_task():
+        """后台执行优选任务"""
+        logger.info("开始后台优选任务")
+        result_file = cf_optimizer.run_optimization()
+        if result_file:
+            logger.info(f"优选完成，结果已保存: {result_file}")
+        else:
+            logger.warning("优选失败")
+
+    # 启动后台线程
+    import threading
+    thread = threading.Thread(target=optimization_task)
+    thread.start()
+
+    # 立即返回成功信息
+    return {"status": "success", "message": "优选任务已在后台启动"}
 
 @app.get("/results", dependencies=[Depends(get_api_key)])
 def get_optimization_results(top: int = Query(0, description="返回前N个结果，0表示全部")):
