@@ -28,6 +28,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# 复制预置的数据文件（如 ip.txt, ipv6.txt）到镜像中
+COPY data/ /app/data/
+
 # 复制所有应用代码到工作目录
 COPY . .
 
