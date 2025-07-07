@@ -15,7 +15,7 @@ RUN groupadd -r appgroup --gid 1000 && \
     useradd --no-log-init -r -s /bin/false --uid 1000 -g appgroup appuser
 
 # 根据您的 .gitignore 文件，创建应用、数据、日志和配置目录
-RUN mkdir -p /app/data  /app/logs  /app/config
+RUN mkdir -p /app /data /logs /config
 
 # 设置工作目录
 WORKDIR /app
