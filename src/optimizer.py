@@ -154,7 +154,10 @@ class CloudflareOptimizer:
             if os.path.exists(self.output_filepath):
                 os.remove(self.output_filepath)
 
-            process = subprocess.run(command, capture_output=True, text=True, encoding='utf-8')
+            # 设置 cwd (current working directory) 为工具所在的目录
+            # 这可以确保工具生成的所有临时文件（如 ip.txt）都在正确的路径下
+            process = subprocess.run(
+                command, capture_output=True, text=True, encoding='utf-8', cwd=self.tool_dir)
 
             if process.returncode != 0:
                 logging.error(f"CloudflareSpeedTest 执行失败，错误信息:\n{process.stderr}")
