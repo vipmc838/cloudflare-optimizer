@@ -17,7 +17,7 @@ class ConfigLoader:
         # 路径配置
         self.config['paths'] = {
             'data_dir': '/app/data',
-            'log_dir': '/app/log',
+            'log_dir': '/app/logs',
             'static_dir': '/app/static',
             'config_dir': '/app/config',
             'log_file': '/app/logs/cf.log',
