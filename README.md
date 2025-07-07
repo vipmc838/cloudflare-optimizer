@@ -46,26 +46,19 @@ services:
       - PGID=1000
 
 ```
+
 ## 📖 OpenWRT 自动更新host
-[OpenWRT]
-# 是否启用 SSH 自动更新功能
-enabled = false
-# OpenWRT 设备的 IP 地址
-host = 192.168.1.1
-# SSH 端口
-port = 22
-# SSH 用户名
-username = root
-# SSH 密码
-password = your_password
-# 更新目标: 'openwrt' 或 'mosdns'
-target = openwrt
-# OpenWRT hosts 文件路径
-openwrt_hosts_path = /etc/hosts
-# MosDNS hosts 文件路径
-mosdns_hosts_path = /etc/mosdns/rule/hosts.txt
-# 更新成功后执行的命令（例如重启 mosdns: /etc/init.d/mosdns restart）
-post_update_command = 
+
+ - 在配置文件中配置
+   
+### 支持通过ssh的方式，更新openwrt的host文件或者更新mosdns的自定义host规则
+ - ##自动CF优选开始##
+ - xxx.xxx 104.25.136.141
+ - xxx.xxx 104.25.136.141
+ - xxx.xxx 104.25.136.141
+ - xxx.xxx 104.25.136.141
+ - xxx.xxx 104.25.136.141
+ - ##自动CF优选结束##
 
 ---
 
