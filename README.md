@@ -11,45 +11,67 @@ thsrite大佬的[Cloudflare IP优选](https://github.com/jxxghp/MoviePilot-Plugi
 
 ## 功能特性
 
-- 定时自动优选Cloudflare IP
-- 完整的API接口服务
-- 详细的性能监控日志
-- Docker容器化支持
-- 可视化仪表板
+- **自动优选**: 根据预设的 Cron 表达式，定时自动执行 IP 速度测试。
+- **心跳检测**: 定期检查当前最优 IP 的可用性，确保其稳定可靠。
+- **RESTful API**: 提供简单的 API 接口，方便其他应用获取最优 IP 和测试结果。
+- **手动触发**: 支持通过 API 手动触发一次优选任务。
+- **Docker 化部署**: 提供 Dockerfile 和 Docker Compose 文件，实现一键部署和运行。
+- **CI/CD**: 集成 GitHub Actions，在代码推送到 `main` 分支后自动构建并发布 Docker 镜像到 Docker Hub。
+
 
 ## 快速开始
 
-### 使用Docker运行
-
-```docker-cli
-docker run -d \
-  --name cf-optimizer \
-  -e puid=1000 \
-  -e pgid=1000 \
-  -p 6788:6788 \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/log:/app/log \
-  -v $(pwd)/config:/app/config \
-  l429609201/cloudflare-ip-optimizer:latest
-```
 
 ### 使用Docker-Compose运行
 ```docker-compose
 version: '3.8'
 
 services:
-  cf-optimizer:
-    image: l429609201/cloudflare-ip-optimizer:latest
-    container_name: cf-ip-optimizer
-    restart: unless-stopped
+  optimizer:
+    # 推荐：使用在 Docker Hub 上预构建的镜像
+    # 请将 'your-dockerhub-username' 替换为你的 Docker Hub 用户名
+    image: ${{ secrets.DOCKERHUB_USERNAME }}/cloudflare-optimizer:latest
+    
+    # 或者，如果你想在本地构建镜像，请注释掉上面的 image 行，并取消下面 build 的注释
+    # build: .
+
+    container_name: cf-optimizer
+    restart: always
     ports:
+      # 将主机的 6788 端口映射到容器的 6788 端口
+      # 如果端口冲突，可以修改左边的端口，例如 "8080:6788"
       - "6788:6788"
     volumes:
-      - ./data:/app/data
-      - ./log:/app/log
+      # 将本地的 config 目录挂载到容器内，用于持久化配置和结果
       - ./config:/app/config
     environment:
-      - puid=1000
-      - pgid=1000
-      - tz=Asia/Shanghai
+      # 设置容器时区，与 config.ini 中的时区保持一致，以确保定时任务准确执行
+      - TZ=Asia/Shanghai
+
+
 ```
+
+
+---
+
+## 📖 API 文档
+
+### 获取最优 IP
+- **URL**: `/api/best_ip`
+- **Method**: `GET`
+- **Success Response**: `{"best_ip": "172.67.7.111"}`
+- **Error Response**: `{"error": "最优IP尚未确定"}`, `status: 404`
+
+### 获取最近一次的完整测试结果
+- **URL**: `/api/results`
+- **Method**: `GET`
+- **Success Response**: `[{"ip": "...", "latency": "...", ...}]`
+- **Error Response**: `{"error": "尚未有优选结果"}`, `status: 404`
+
+### 手动触发一次优选任务
+- **URL**: `/api/run_test`
+- **Method**: `POST`
+- **Success Response**: `{"message": "IP优选任务已启动"}`, `status: 202`
+- **Error Response**: `{"message": "优选任务已在运行中，请稍后再试"}`, `status: 429`
+
+---
