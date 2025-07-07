@@ -94,6 +94,21 @@ class CloudflareOptimizer:
             if system != "nt":
                 os.chmod(self.binary_path, 0o755)
             
+            # 清理下载和解压后的多余文件
+            self.logger.info("清理下载文件...")
+            try:
+                # 1. 删除下载的压缩包
+                os.remove(local_path)
+                self.logger.info(f"已删除压缩包: {local_path}")
+                # 2. 删除其他不必要的文件
+                for extra_file in ["cfst_hosts.sh", "使用+错误+反馈说明.txt"]:
+                    file_to_delete = self.data_dir / extra_file
+                    if file_to_delete.exists():
+                        os.remove(file_to_delete)
+                        self.logger.info(f"已删除附加文件: {file_to_delete}")
+            except OSError as e:
+                self.logger.warning(f"清理文件时出错: {e}")
+
             return True
         except Exception as e:
             self.logger.error(f"Download failed: {str(e)}")
