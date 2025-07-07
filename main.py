@@ -88,9 +88,8 @@ if __name__ == "__main__":
     
     # 根据配置创建所需目录
     data_dir = Path(config.get('paths', 'data_dir', fallback='/app/data'))
-    log_dir = Path(config.get('paths', 'log_dir', fallback='/app/log'))
     data_dir.mkdir(exist_ok=True, parents=True)
-    log_dir.mkdir(exist_ok=True, parents=True)
+    # 日志目录的创建已在 setup_logging() 函数中处理，此处无需重复
     
     try:
         # 启动调度器
