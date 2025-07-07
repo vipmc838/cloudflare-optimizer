@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from .optimizer import CloudflareOptimizer  # 确保使用相对导入
 from .state import app_state
+import threading
 
 def create_app(optimizer: CloudflareOptimizer) -> Flask:
     """创建并配置 Flask 应用实例 (Application Factory)"""
