@@ -9,5 +9,4 @@ __pycache__
 env/
 venv/
 logs/
-data/
 config/
