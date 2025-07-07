@@ -30,6 +30,7 @@ services:
   cf-optimizer:
     image: l429609201/cloudflare-optimizer:latest
     container_name: cf-optimizer
+    #network_mode: host
     restart: always
     ports:
       # 将主机的 6788 端口映射到容器的 6788 端口
