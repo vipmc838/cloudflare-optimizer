@@ -27,14 +27,8 @@ thsrite大佬的[Cloudflare IP优选](https://github.com/jxxghp/MoviePilot-Plugi
 version: '3.8'
 
 services:
-  optimizer:
-    # 推荐：使用在 Docker Hub 上预构建的镜像
-    # 请将 'your-dockerhub-username' 替换为你的 Docker Hub 用户名
-    image: ${{ secrets.DOCKERHUB_USERNAME }}/cloudflare-optimizer:latest
-    
-    # 或者，如果你想在本地构建镜像，请注释掉上面的 image 行，并取消下面 build 的注释
-    # build: .
-
+  cf-optimizer:
+    image: l429609201/cloudflare-optimizer:latest
     container_name: cf-optimizer
     restart: always
     ports:
