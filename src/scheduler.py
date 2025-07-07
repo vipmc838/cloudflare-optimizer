@@ -28,13 +28,6 @@ class TaskScheduler:
         
         self.scheduler.start()
         self.logger.info("Scheduler started")
-        
-        try:
-            while True:
-                time.sleep(3600)  # 主线程休眠
-        except (KeyboardInterrupt, SystemExit):
-            self.scheduler.shutdown()
-            self.logger.info("Scheduler stopped")
 
     def run_optimization_task(self):
         self.logger.info("Starting Cloudflare optimization task")
