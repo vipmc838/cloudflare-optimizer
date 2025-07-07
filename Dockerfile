@@ -10,12 +10,25 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gosu \
     && rm -rf /var/lib/apt/lists/*
 
-# 创建一个非 root 用户和组，后续将使用 PUID/PGID 动态修改
-RUN groupadd -r appgroup --gid 1000 && \
-    useradd --no-log-init -r -s /bin/false --uid 1000 -g appgroup appuser
+# ✨ 1. 接收从 Unraid (或 docker-compose) 传来的环境变量，并设置默认值 ✨
+ARG PUID=1000
+ARG PGID=1000
+
+# ✨✨✨ START: 决定性的修复 ✨✨✨
+# 1. 检查目标 PUID 是否已被占用，如果被占用，就删除那个用户
+#    我们用 `getent passwd ${PUID}` 来查找，如果找到了，第一列就是用户名
+RUN if getent passwd ${PUID} > /dev/null; then \
+    echo "User with PUID ${PUID} already exists, deleting it."; \
+    EXISTING_USER=$(getent passwd ${PUID} | cut -d: -f1); \
+    deluser $EXISTING_USER; \
+    fi && \
+    # 2. 现在可以安全地创建我们自己的用户和组了
+    groupadd -g ${PGID} appgroup && \
+    useradd -u ${PUID} -g appgroup -s /bin/sh -m appuser
+# ✨✨✨ END: 决定性的修复 ✨✨✨
 
 # 根据您的 .gitignore 文件，创建应用、数据、日志和配置目录
-RUN mkdir -p /app /data /logs /config
+RUN mkdir -p /app /data /logs /config && chown -R appuser:appgroup /app /data /logs /config
 
 # 设置工作目录
 WORKDIR /app
@@ -24,15 +37,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 复制入口点脚本并赋予执行权限
-COPY entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 # 复制所有应用代码到工作目录
 COPY . .
 
-# 设置入口点，容器启动时会执行这个脚本
-ENTRYPOINT ["entrypoint.sh"]
+# ✨ 4. 切换到这个新创建的非 root 用户 ✨
+USER appuser
 
 # 设置容器启动时执行的默认命令
 # 假设您的 FastAPI 应用实例在 main.py 文件中，变量名为 app
