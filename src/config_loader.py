@@ -56,7 +56,12 @@ class ConfigLoader:
             're_install': 'false',
             'proxy': '',
             'api_port': '6788',
-            'api_key': '12345678'
+            'api_key': '12345678',
+            # 心跳服务配置
+            'heartbeat_enabled': 'true',         # 是否启用心跳服务
+            'heartbeat_cron': '*/5 * * * *',     # 心跳检测的cron表达式 (默认每5分钟)
+            'heartbeat_ping_count': '2',         # Ping的次数
+            'heartbeat_ping_timeout': '3'        # Ping的超时时间 (秒)
         }
         os.makedirs(self.config_path.parent, exist_ok=True)
         with open(self.config_path, 'w', encoding='utf-8') as f:
