@@ -54,13 +54,26 @@ def main() -> None:
     CONFIG_DIR = os.path.join(PROJECT_ROOT, 'config')
     CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.ini')
 
-    # 2. 读取配置
-    config = configparser.ConfigParser()
-    if not os.path.exists(CONFIG_FILE_PATH):
-        logging.error(f"配置文件未找到: {CONFIG_FILE_PATH}")
-        sys.exit(1)
-    config.read(CONFIG_FILE_PATH, encoding='utf-8')
+    # 确保配置目录存在
     os.makedirs(CONFIG_DIR, exist_ok=True)
+
+    # 2. 读取配置
+    if not os.path.exists(CONFIG_FILE_PATH):
+        logging.warning(f"配置文件未找到: {CONFIG_FILE_PATH}，将使用默认配置并创建文件。")
+        config = configparser.ConfigParser()
+        config['CloudflareSpeedTest'] = {
+            'params': '-p 0 -o result.csv -url https://cf.xiu2.xyz/url'
+        }
+        config['Scheduler'] = {
+            'optimize_cron': '0 3 * * *',
+            'heartbeat_cron': '*/5 * * * *'
+        }
+        config['API'] = {'port': 6788}
+        with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as configfile:
+            config.write(configfile)
+    else:
+        config = configparser.ConfigParser()
+        config.read(CONFIG_FILE_PATH, encoding='utf-8')
 
     # 3. 初始化核心优选器，并传入配置目录
     optimizer = CloudflareOptimizer(config, config_dir=CONFIG_DIR)
