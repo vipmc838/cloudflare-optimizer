@@ -163,14 +163,14 @@ class CloudflareOptimizer:
         
         # 处理输出文件 -o。如果用户在 config.ini 中设置了 'o'，则使用它。
         # 否则，不添加 -o 参数，让 CloudflareST 使用默认的 result.csv。
-        # output_path_str = args.get('o')
-        # if output_path_str:
-        #     result_file = Path(output_path_str)
-        #     cmd.extend(["-o", str(result_file)])
-        # else:
-        #     result_file = Path(config.get('paths', 'result_file'))
+        output_path_str = args.get('o')
+        if output_path_str:
+             result_file = Path(output_path_str)
+             cmd.extend(["-o", str(result_file)])
+        else:
+            result_file = Path(config.get('paths', 'result_file'))
         
-        # self.logger.info(f"Running command: {' '.join(cmd)}")
+        self.logger.info(f"Running command: {' '.join(cmd)}")
         
         # 执行命令
         try:
