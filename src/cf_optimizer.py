@@ -182,7 +182,7 @@ class CloudflareOptimizer:
             )
 
             # 实时读取标准输出并记录
-            if process.stdout:
+            if process.stdout:  # 确保 process.stdout 不为 None
                 for line in iter(process.stdout.readline, ''):
                     # 移除行尾的换行符并记录，这样每条日志都会有自己的时间戳
                     self.logger.info(line.strip())
@@ -190,19 +190,24 @@ class CloudflareOptimizer:
 
             # 等待进程结束
             return_code = process.wait()
+            self.logger.info(f"CloudflareST exited with code: {return_code}")  # 记录退出代码
 
             # 读取可能存在的标准错误输出
-            if process.stderr:
+            if process.stderr:  # 确保 process.stderr 不为 None
                 stderr_output = process.stderr.read()
                 if stderr_output:
                     self.logger.warning("CloudflareST stderr:")
                     for line in stderr_output.strip().split('\n'):
                         self.logger.warning(line)
                 process.stderr.close()
+            else:
+                self.logger.info("CloudflareST stderr: <empty>")  # 如果 stderr 为空，记录信息
 
             if return_code != 0:
-                self.logger.error(f"CloudflareST process exited with error code {return_code}")
-                return None
+                error_message = f"CloudflareST failed (exit code: {return_code}). Check logs above for details."
+                self.logger.error(error_message)
+                # 抛出异常，让调用者也能感知到错误
+                raise subprocess.CalledProcessError(return_code, cmd, stderr=stderr_output)
 
             # 记录最优IP
             self.log_best_ip(result_file)
@@ -211,6 +216,9 @@ class CloudflareOptimizer:
         except FileNotFoundError:
             self.logger.error(f"命令执行失败: 未找到 CloudflareST 工具 at '{self.binary_path}'. 请检查路径或重新安装。")
             return None
+        except subprocess.CalledProcessError as e:
+            # 捕获子进程异常，记录更详细的错误信息
+            self.logger.error(f"CloudflareST execution error: {e}")
         except Exception as e:
             self.logger.error(f"Optimization failed: {str(e)}")
             return None
