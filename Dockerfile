@@ -8,26 +8,43 @@ ENV PYTHONUNBUFFERED 1
 # 设置工作目录
 WORKDIR /app
 
-# 安装系统依赖 (ping)
-# slim 镜像默认不包含 ping 工具，需要手动安装
+# 接收构建时参数，并设置默认值
+ARG PUID=1000
+ARG PGID=1000
+
+# 安装系统依赖并创建用户
+# 这种方法将用户权限在构建时固化到镜像中
 RUN apt-get update && apt-get install -y iputils-ping && \
+    # 检查并删除可能冲突的现有组和用户
+    if getent group ${PGID} > /dev/null; then delgroup $(getent group ${PGID} | cut -d: -f1); fi && \
+    if getent passwd ${PUID} > /dev/null; then deluser $(getent passwd ${PUID} | cut -d: -f1); fi && \
+    # 创建指定ID的用户和组
+    addgroup --gid ${PGID} appgroup && \
+    adduser --shell /bin/sh --disabled-password --uid ${PUID} --gid ${PGID} appuser && \
+    # 清理apt缓存
     rm -rf /var/lib/apt/lists/*
 
 # 安装依赖
 # 先只复制 requirements.txt 文件，这样可以利用 Docker 的层缓存机制
 # 只有当依赖变化时，才会重新执行 pip install
 COPY requirements.txt .
+# 以 root 身份安装，确保有权限写入 /usr/local/lib
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制应用程序代码
 # 将 src 目录复制到容器的 /app/src
 COPY src/ ./src/
-
 # 将默认的 config 目录复制到容器中，作为备用
 COPY config/ ./config/
 
+# 更改工作目录所有权为新创建的用户
+RUN chown -R appuser:appgroup /app
+
 # 暴露 API 服务的端口
 EXPOSE 6788
+
+# 切换到非 root 用户
+USER appuser
 
 # 容器启动时执行的命令
 CMD ["python", "-m", "src.main"]
