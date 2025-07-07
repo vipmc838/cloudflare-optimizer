@@ -4,6 +4,7 @@ import logging
 import requests
 import zipfile
 import tarfile
+import platform
 from pathlib import Path
 from datetime import datetime
 from .config_loader import config
@@ -54,17 +55,25 @@ class CloudflareOptimizer:
             data = response.json()
             version = data["tag_name"]
             
-            # 根据系统确定下载文件
-            system = os.name
-            arch = "amd64"
+            # 根据系统和架构确定下载文件
+            system = platform.system().lower()
+            machine = platform.machine().lower()
+            if 'aarch64' in machine or 'arm64' in machine:
+                arch = "arm64"
+            elif 'arm' in machine: # 涵盖 armv7l 等
+                arch = "armv7"
+            elif 'x86_64' in machine or 'amd64' in machine:
+                arch = "amd64"
+            else:
+                self.logger.error(f"不支持的系统架构: {machine}")
+                return False
             
-            if system == "nt":  # Windows
+            if system == "windows":
                 filename = f"CloudflareST_windows_{arch}.zip"
-            elif system == "posix":  # Linux/Mac
-                if os.uname().sysname == "Darwin":
-                    filename = f"CloudflareST_darwin_{arch}.zip"
-                else:
-                    filename = f"CloudflareST_linux_{arch}.tar.gz"
+            elif system == "linux":
+                filename = f"CloudflareST_linux_{arch}.tar.gz"
+            elif system == "darwin":
+                filename = f"CloudflareST_darwin_{arch}.zip"
             else:
                 self.logger.error("Unsupported OS")
                 return False
@@ -91,7 +100,7 @@ class CloudflareOptimizer:
                     tar_ref.extractall(self.data_dir)
             
             # 设置执行权限 (Unix)
-            if system != "nt":
+            if system != "windows":
                 os.chmod(self.binary_path, 0o755)
             
             # 清理下载和解压后的多余文件
@@ -125,32 +134,23 @@ class CloudflareOptimizer:
         # 获取配置参数
         args = config.get_args_dict()
         
-        # 构建命令
+        # 定义参数类型映射
+        param_map = {
+            # 参数名: (类型, 是否需要值)
+            'n': 'value', 't': 'value', 'dn': 'value', 'dt': 'value', 'tp': 'value',
+            'p': 'value', 'tl': 'value', 'tll': 'value', 'sl': 'value', 'tlr': 'value',
+            'url': 'value', 'httping_code': 'value', 'cfcolo': 'value', 'ip': 'value',
+            'httping': 'flag', 'dd': 'flag', 'allip': 'flag', 'debug': 'flag'
+        }
+
         cmd = [str(self.binary_path)]
-        
-        # 添加数值参数
-        num_params = ['n', 't', 'dn', 'dt', 'tp', 'p', 'tl', 'tll', 'sl']
-        for param in num_params:
-            if param in args:
-                cmd.extend([f"-{param}", str(args[param])])
-        
-        # 添加浮点参数
-        float_params = ['tlr']
-        for param in float_params:
-            if param in args:
-                cmd.extend([f"-{param}", str(args[param])])
-        
-        # 添加其他字符串参数 (文件路径参数将单独处理)
-        str_params = ['url', 'httping_code', 'cfcolo', 'ip']
-        for param in str_params:
-            if param in args and args[param]:
-                cmd.extend([f"-{param}", str(args[param])])
-        
-        # 添加布尔参数
-        bool_params = {'httping': '-httping', 'dd': '-dd', 'allip': '-allip', 'debug': '-debug'}
-        for param, flag in bool_params.items():
-            if param in args and args[param]:
-                cmd.append(flag)
+        for key, value in args.items():
+            if key in param_map:
+                param_type = param_map[key]
+                if param_type == 'value' and value:
+                    cmd.extend([f"-{key}", str(value)])
+                elif param_type == 'flag' and value:
+                    cmd.append(f"-{key}")
         
         # 显式处理输入文件 -f (使用绝对路径)
         # CloudflareST 支持多个 -f 参数
