@@ -10,6 +10,7 @@ import logging
 import csv
 from io import StringIO
 from .state import app_state
+from .updater import update_openwrt_hosts
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,6 +21,7 @@ class CloudflareOptimizer:
         self.tool_dir = os.path.join(self.config_dir, "cfs_tool")
         self.tool_path = self._get_tool_path()
         self.params = config['CloudflareSpeedTest']['params'].split()
+        self.openwrt_config = config['OpenWRT'] if 'OpenWRT' in config else None
         
         # 获取原始输出文件名并构建完整路径
         output_filename = self._find_output_filename()
@@ -193,6 +195,10 @@ class CloudflareOptimizer:
                 app_state.last_results = results
 
                 logging.info(f"成功解析结果，最优IP: {app_state.best_ip}")
+
+                # 如果启用了 OpenWRT 更新，则执行更新
+                if self.openwrt_config and app_state.best_ip:
+                    update_openwrt_hosts(self.openwrt_config, app_state.best_ip)
                 
         except FileNotFoundError:
             logging.error(f"结果文件 '{self.output_filepath}' 未找到，解析失败。")
