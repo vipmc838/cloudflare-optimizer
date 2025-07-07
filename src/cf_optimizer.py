@@ -162,8 +162,8 @@ class CloudflareOptimizer:
             cmd.extend(["-f", ipv6_file])
         
         # 显式处理输出文件 -o (使用绝对路径)
-        result_file = Path(args.get('o', config.get('paths', 'result_file')))  # 确保正确使用了配置中的 result_file
-        cmd.extend(["-o", str(result_file)])
+        #result_file = Path(args.get('o', config.get('paths', 'result_file')))  # 确保正确使用了配置中的 result_file
+        cmd.extend(["-o"， "result.csv"])
         
         self.logger.info(f"Running command: {' '.join(cmd)}")
         
