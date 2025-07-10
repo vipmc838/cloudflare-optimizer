@@ -64,30 +64,48 @@ class CloudflareOptimizer:
             "darwin": "darwin",
             "win32": "windows"
         }
+        # 扩展架构映射以支持更多平台，如 32 位和旧版 ARM
         arch_map = {
             "amd64": "amd64",
             "x86_64": "amd64",
             "aarch64": "arm64",
-            "arm64": "arm64"
+            "arm64": "arm64",
+            "i386": "386",
+            "i686": "386",
+            "x86": "386",
+            "armv7l": "armv7",
+            "armv6l": "armv6",
         }
         
-        os_name = os_map.get(sys.platform)
-        arch = arch_map.get(platform.machine().lower())
+        system_platform = sys.platform
+        system_machine = platform.machine().lower()
+        
+        os_name = os_map.get(system_platform)
+        arch = arch_map.get(system_machine)
+
+        # 增加详细日志，方便调试
+        logging.info(f"系统检测: platform='{system_platform}', machine='{system_machine}'")
+        logging.info(f"映射结果: os_name='{os_name}', arch='{arch}'")
 
         if not os_name or not arch:
-            raise RuntimeError(f"不支持的操作系统或架构: {sys.platform} / {platform.machine()}")
+            logging.error(f"无法映射当前系统。os_map 支持: {list(os_map.keys())}, arch_map 支持: {list(arch_map.keys())}")
+            raise RuntimeError(f"不支持的操作系统或架构: {system_platform} / {system_machine}")
 
         # 从 GitHub API 获取最新的 release 信息
         try:
             api_url = "https://api.github.com/repos/XIU2/CloudflareSpeedTest/releases/latest"
+            logging.info(f"正在从 GitHub API 获取最新版本信息: {api_url}")
             response = requests.get(api_url, timeout=10)
             response.raise_for_status()
             release_data = response.json()
             
             # 查找匹配的 asset
             asset_name_fragment = f"CloudflareST_{os_name}_{arch}"
+            logging.info(f"正在查找包含 '{asset_name_fragment}' 的资源文件...")
+            
             for asset in release_data.get("assets", []):
-                if asset_name_fragment in asset.get("name", ""):
+                asset_name = asset.get("name", "")
+                if asset_name_fragment in asset_name:
                     logging.info(f"找到匹配的下载资源: {asset['name']}")
                     return asset["browser_download_url"]
         except requests.RequestException as e:
