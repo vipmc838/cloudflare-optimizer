@@ -8,7 +8,7 @@ import threading
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from waitress import serve
-from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.cron import CronTrigger 
 
 # 使用相对导入，因为所有 .py 文件都在 src 包中
 from .optimizer import CloudflareOptimizer
@@ -53,6 +53,8 @@ def main() -> None:
     PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     CONFIG_DIR = os.path.join(PROJECT_ROOT, 'config')
     CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.ini')
+    LOG_FILE_PATH = os.path.join(PROJECT_ROOT, 'app.log') # 定义日志文件路径
+    TEMPLATE_DIR = os.path.join(PROJECT_ROOT, 'templates')
 
     # 确保配置目录存在
     os.makedirs(CONFIG_DIR, exist_ok=True)
@@ -86,6 +88,13 @@ def main() -> None:
         config = configparser.ConfigParser()
         config.read(CONFIG_FILE_PATH, encoding='utf-8')
 
+    # 配置日志记录到文件
+    logging.basicConfig(level=logging.INFO, 
+                        format='%(asctime)s - %(levelname)s - %(message)s',
+                        filename=LOG_FILE_PATH,  # 指定日志文件名
+                        filemode='w')  # 覆盖模式
+
+
     # 3. 初始化核心优选器，并传入配置目录
     optimizer = CloudflareOptimizer(config, config_dir=CONFIG_DIR)
 
@@ -98,10 +107,16 @@ def main() -> None:
     initial_run_thread = threading.Thread(target=optimizer.run_speed_test)
     initial_run_thread.start()
 
-    # 6. 创建 Flask App
+    # 6. 创建 Flask App, 传入 template_folder
     app = create_app(optimizer)
+    # 在 app.config 中存储配置对象，方便在 API 路由中使用
+    app.config['CONFIG'] = config
+    app.config['CONFIG_FILE_PATH'] = CONFIG_FILE_PATH
+    app.config['LOG_FILE_PATH'] = LOG_FILE_PATH
+
 
     # 7. 配置并启动调度器
+
     scheduler = setup_scheduler(optimizer, config)
 
     # 8. 启动API服务
@@ -115,6 +130,12 @@ def main() -> None:
         scheduler.shutdown()
         logging.info("等待初次优选任务完成...")
         initial_run_thread.join() # 确保初次运行在退出前完成
+
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+
+
 
 if __name__ == '__main__':
     main()
