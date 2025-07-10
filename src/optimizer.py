@@ -51,7 +51,7 @@ class CloudflareOptimizer:
         os_name = sys.platform
         arch = platform.machine().lower()
         
-        filename = "CloudflareST"
+        filename = "cfst"
         if os_name == "win32":
             filename += ".exe"
             
@@ -75,6 +75,10 @@ class CloudflareOptimizer:
             "x86": "386",
             "armv7l": "armv7",
             "armv6l": "armv6",
+            "mips": "mips",
+            "mipsle": "mipsle",
+            "mips64": "mips64",
+            "mips64le": "mips64le",
         }
         
         system_platform = sys.platform
@@ -100,7 +104,7 @@ class CloudflareOptimizer:
             release_data = response.json()
             
             # 查找匹配的 asset
-            asset_name_fragment = f"CloudflareST_{os_name}_{arch}"
+            asset_name_fragment = f"cfst_{os_name}_{arch}"
             logging.info(f"正在查找包含 '{asset_name_fragment}' 的资源文件...")
             
             for asset in release_data.get("assets", []):
@@ -117,10 +121,10 @@ class CloudflareOptimizer:
     def download_and_extract_tool(self):
         """如果工具不存在，则下载并解压"""
         if os.path.exists(self.tool_path):
-            logging.info(f"CloudflareSpeedTest 工具已存在于: {self.tool_path}")
+            logging.info(f"cfst 工具已存在于: {self.tool_path}")
             return
 
-        logging.info("CloudflareSpeedTest 工具未找到，开始下载...")
+        logging.info("cfst 工具未找到，开始下载...")
         os.makedirs(self.tool_dir, exist_ok=True)
         
         try:
@@ -180,7 +184,7 @@ class CloudflareOptimizer:
                 command, capture_output=True, text=True, encoding='utf-8', cwd=self.tool_dir)
 
             if process.returncode != 0:
-                logging.error(f"CloudflareSpeedTest 执行失败，错误信息:\n{process.stderr}")
+                logging.error(f"cfst 执行失败，错误信息:\n{process.stderr}")
                 return
 
             logging.info("IP 优选完成，开始解析结果...")
