@@ -1,14 +1,18 @@
-from flask import Flask, jsonify, current_app
+from flask import Flask, jsonify, current_app, render_template, request
 from .optimizer import CloudflareOptimizer  # 确保使用相对导入
 from .state import app_state
 import threading
 import logging
 import configparser
 
-def create_app(optimizer: CloudflareOptimizer) -> Flask:
+def create_app(optimizer: CloudflareOptimizer, template_folder: str) -> Flask:
     """创建并配置 Flask 应用实例 (Application Factory)"""
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder=template_folder)
     app.config['OPTIMIZER_INSTANCE'] = optimizer
+
+    @app.route('/', methods=['GET'])
+    def index():
+        return render_template('index.html')
 
     @app.route('/api/best_ip', methods=['GET'])
     def get_best_ip():
