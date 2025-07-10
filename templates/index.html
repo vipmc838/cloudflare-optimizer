@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudflare Optimizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Cloudflare IP Optimizer</h1>
+
+        <section id="best-ip">
+            <h2>最优 IP</h2>
+            <p id="best-ip-value">Loading...</p>
+        </section>
+
+        <section id="logs">
+            <h2>实施日志</h2>
+            <pre id="log-content">Loading...</pre>
+        </section>
+
+        <section id="config">
+            <h2>配置 (config.ini)</h2>
+            <pre id="config-content">Loading...</pre>
+            <!--  配置修改表单 (示例，需要根据实际配置结构调整)
+            <form id="config-form">
+                <label for="optimize_cron">Optimize Cron:</label>
+                <input type="text" id="optimize_cron" name="optimize_cron"><br><br>
+                <button type="submit">Update Config</button>
+            </form>
+            -->
+        </section>
+
+        <button id="run-test">Run IP Optimization</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
