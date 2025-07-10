@@ -5,7 +5,6 @@ import logging
 import os
 import sys
 import threading
-from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from waitress import serve
 from apscheduler.triggers.cron import CronTrigger 
@@ -88,12 +87,24 @@ def main() -> None:
         config = configparser.ConfigParser()
         config.read(CONFIG_FILE_PATH, encoding='utf-8')
 
-    # 配置日志记录到文件
-    logging.basicConfig(level=logging.INFO, 
-                        format='%(asctime)s - %(levelname)s - %(message)s',
-                        filename=LOG_FILE_PATH,  # 指定日志文件名
-                        filemode='w')  # 覆盖模式
+    # 配置日志系统，同时输出到文件和控制台
+    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
 
+    # 移除所有现有的处理器，以避免重复日志
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # 文件处理器
+    file_handler = logging.FileHandler(LOG_FILE_PATH, mode='w', encoding='utf-8')
+    file_handler.setFormatter(log_formatter)
+    root_logger.addHandler(file_handler)
+
+    # 控制台处理器
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(log_formatter)
+    root_logger.addHandler(console_handler)
 
     # 3. 初始化核心优选器，并传入配置目录
     optimizer = CloudflareOptimizer(config, config_dir=CONFIG_DIR)
@@ -107,8 +118,8 @@ def main() -> None:
     initial_run_thread = threading.Thread(target=optimizer.run_speed_test)
     initial_run_thread.start()
 
-    # 6. 创建 Flask App, 传入 template_folder
-    app = create_app(optimizer)
+    # 6. 创建 Flask App, 并传入模板文件夹路径
+    app = create_app(optimizer, template_folder=TEMPLATE_DIR)
     # 在 app.config 中存储配置对象，方便在 API 路由中使用
     app.config['CONFIG'] = config
     app.config['CONFIG_FILE_PATH'] = CONFIG_FILE_PATH
@@ -130,11 +141,6 @@ def main() -> None:
         scheduler.shutdown()
         logging.info("等待初次优选任务完成...")
         initial_run_thread.join() # 确保初次运行在退出前完成
-
-    @app.route('/')
-    def index():
-        return render_template('index.html')
-
 
 
 if __name__ == '__main__':
