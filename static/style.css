@@ -1,13 +1,13 @@
 :root {
-    --bg-color: #1a1a1a;
-    --card-bg-color: #2c2c2c;
-    --text-color: #d9d0c1; /* 更柔和的文字颜色 */
-    --header-color: #ffffff;
-    --border-color: #444444;
-    --accent-color: #e67e22; /* 暖色调主色 */
-    --accent-hover-color: #d35400;
-    --success-color: #28a745;
-    --error-color: #dc3545;
+    --bg-color: #f8f9fa; /* 浅灰色背景 */
+    --card-bg-color: #ffffff; /* 白色卡片 */
+    --text-color: #495057; /* 深灰色文字 */
+    --header-color: #212529; /* 黑色标题 */
+    --border-color: #dee2e6; /* 浅灰色边框 */
+    --accent-color: #007bff; /* 蓝色主色 */
+    --accent-hover-color: #0056b3;
+    --success-color: #28a745; /* 绿色 */
+    --error-color: #dc3545; /* 红色 */
     --font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     --font-size: 16px; /* 基础字体大小 */
 }
@@ -83,8 +83,8 @@ header h1 {
 }
 
 #config-content {
-    background-color: #333; /* 略深的背景色 */
-    color: var(--text-color);
+    background-color: #f1f3f5; /* 文本区域背景色 */
+    color: var(--header-color);
     border: 1px solid var(--border-color);
     border-radius: 5px;
     padding: 10px;
@@ -98,8 +98,8 @@ header h1 {
 
 /* 调整 pre 元素的样式，使其与 textarea 风格统一 */
 #logs-card pre {
-    background-color: #333;
-    color: var(--text-color);
+    background-color: #f1f3f5;
+    color: var(--header-color);
     border-radius: 5px;
     padding: 10px;
     overflow-y: auto;
@@ -107,9 +107,10 @@ header h1 {
     white-space: pre-wrap;
 }
 
-#results-card pre {
-    background-color: #333;
-    color: var(--text-color);
+/* 确保结果区域的 p 标签也有背景色 */
+#results-content p {
+    background-color: #f1f3f5;
+    color: var(--header-color);
     border-radius: 5px;
     padding: 10px;
     overflow-x: auto;
@@ -174,13 +175,56 @@ header h1 {
 }
 
 #results-table thead {
-    background-color: #333;
+    background-color: #e9ecef;
+    color: var(--header-color);
 }
 
 #results-table tbody tr:nth-child(even) {
-    background-color: #3a3a3a;
+    /* background-color: #f8f9fa; */ /* 斑马条纹，如果需要可以取消注释 */
 }
 
 #results-table tbody tr:hover {
-    background-color: #4a4a4a;
+    background-color: #e9ecef;
+}
+
+.config-description {
+    background-color: #f1f3f5;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.config-description p {
+    margin-bottom: 10px;
+}
+
+.config-description ul {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.config-description li {
+    margin-bottom: 5px;
+}
+
+.config-description li::before {
+    content: '•';
+    color: var(--accent-color);
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+.config-description code {
+    background-color: #e9ecef;
+    color: #c7254e; /* A reddish color for code, common in light themes */
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.config-description strong {
+    color: var(--header-color);
 }
