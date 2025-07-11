@@ -5,9 +5,9 @@ import threading
 import logging
 import configparser
 
-def create_app(optimizer: CloudflareOptimizer, template_folder: str) -> Flask:
+def create_app(optimizer: CloudflareOptimizer, template_folder: str, static_folder: str) -> Flask:
     """创建并配置 Flask 应用实例 (Application Factory)"""
-    app = Flask(__name__, template_folder=template_folder)
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config['OPTIMIZER_INSTANCE'] = optimizer
 
     @app.route('/', methods=['GET'])
