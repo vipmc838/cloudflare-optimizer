@@ -80,6 +80,9 @@ def main() -> None:
             'mosdns_hosts_path': '/etc/mosdns/rule/hosts.txt',
             'post_update_command': ''
         }
+        config['Download'] = {
+            'proxy': 'https://ghproxy.com/'
+        }
         config['API'] = {'port': 6788}
         with open(CONFIG_FILE_PATH, 'w', encoding='utf-8') as configfile:
             config.write(configfile)
