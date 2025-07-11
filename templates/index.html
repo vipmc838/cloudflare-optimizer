@@ -34,6 +34,98 @@
             <div class="button-container">
                 <button id="save-config">保存配置</button>
             </div>
+            <div class="config-description">
+                <p><strong>config.ini 参数说明：</strong></p>
+                <ul>
+                    <li><code>[cfst]</code>：CloudflareSpeedTest 工具的参数配置。</li>
+                    <li><code>params</code>：传递给 cfst 可执行文件的参数。
+                        <ul>
+                            <li><code>-n &lt;线程数&gt;</code>：延迟测速线程数；越多测速越快，但性能弱的设备（如路由器）请勿设置过高；默认 200，最多 1000。</li>
+                            <li><code>-t &lt;次数&gt;</code>：延迟测速次数；单个 IP 延迟测速的次数；默认 4 次。</li>
+                            <li><code>-dn &lt;数量&gt;</code>：下载测速数量；延迟测速后，从最低延迟的 IP 中选择指定数量进行下载测速；默认 10 个。</li>
+                            <li><code>-dt &lt;秒数&gt;</code>：下载测速时间；单个 IP 下载测速的最长时间，不能太短；默认 10 秒。</li>
+                            <li><code>-tp &lt;端口&gt;</code>：指定测速端口；延迟和下载测速时使用的端口；默认 443 端口。</li>
+                            <li><code>-url &lt;地址&gt;</code>：指定测速地址；用于延迟测速 (HTTPing) 和下载测速的地址，默认地址不保证可用性，建议自建；当下载测速时，会从 HTTP 响应头中获取 IP 的地区码。</li>
+                            <li><code>-httping</code>：切换测速模式；将延迟测速模式切换为 HTTP 协议，使用 <code>-url</code> 指定的地址；默认使用 TCPing。使用 HTTP 测速时，会从响应头获取 IP 地区码。</li>
+                            <li><code>-httping-code &lt;状态码&gt;</code>：有效状态代码；HTTPing 延迟测速时，网页返回的有效 HTTP 状态码，仅限一个；默认 200, 301, 302。</li>
+                            <li><code>-cfcolo &lt;地区码&gt;</code>：匹配指定地区；使用 IATA 机场代码或国家/城市代码，英文逗号分隔，大小写均可，仅 HTTPing 模式可用；默认为所有地区。Cloudflare、AWS CloudFront、Fastly 使用 IATA 机场代码（如：HKG, LAX），CDN77、Bunny 使用二字国家/区域代码（如：US, CN），Gcore 使用二字城市代码（如：FR, AM）。</li>
+                            <li><code>-tl &lt;毫秒&gt;</code>：平均延迟上限；只输出平均延迟低于指定值的 IP，可与其他上下限条件搭配使用；默认 9999 毫秒。</li>
+                            <li><code>-tll &lt;毫秒&gt;</code>：平均延迟下限；只输出平均延迟高于指定值的 IP；默认 0 毫秒。</li>
+                            <li><code>-tlr &lt;比率&gt;</code>：丢包几率上限；只输出丢包率低于或等于指定值的 IP，范围 0.00~1.00，0 表示过滤掉任何丢包的 IP；默认 1.00。</li>
+                            <li><code>-sl &lt;MB/s&gt;</code>：下载速度下限；只输出下载速度高于指定值的 IP，需要凑够 <code>-dn</code> 指定的数量才会停止测速；默认 0.00 MB/s。</li>
+                            <li><code>-p &lt;数量&gt;</code>：显示结果数量；测速后直接显示指定数量的结果，设置为 0 时不显示结果，直接退出；默认 10 个。</li>
+                            <li><code>-f &lt;文件路径&gt;</code>：IP 段数据文件；指定包含 IP 段数据的文件，路径中如有空格请使用引号；支持其他 CDN IP 段；默认使用 ip.txt。</li>
+                            <li><code>-ip &lt;IP段&gt;</code>：指定 IP 段数据；直接通过参数指定要测速的 IP 段数据，用英文逗号分隔；默认值为空。</li>
+                            <li><code>-o &lt;文件路径&gt;</code>：写入结果文件；指定结果文件的路径，路径中如有空格请使用引号；值为空时不写入文件（<code>-o ""</code>）；默认结果文件为 result.csv。</li>
+                            <li><code>-dd</code>：禁用下载测速；禁用后，测速结果将按延迟排序（默认按下载速度排序）；默认启用下载测速。</li>
+                            <li><code>-allip</code>：测速全部 IP；对 IP 段中的每个 IP（仅支持 IPv4）进行测速；默认情况下，每个 /24 段随机测速一个 IP。</li>
+                            <li><code>-debug</code>：调试输出模式；在一些非预期情况下输出更多日志，以便判断原因；默认关闭。目前该功能仅针对 HTTPing 延迟测速过程及下载测速过程，当过程中因为各种原因导致当前 IP 测速中断都会输出错误原因，例如 HTTP 状态码不符合、测速地址有问题或超时等。</li>
+                            <li><code>-v</code>：打印程序版本并检查更新。</li>
+                            <li><code>-h</code>：打印帮助说明。</li>
+                        </ul>
+                    </li>
+                    <li><code>[Scheduler]</code>：定时任务配置。</li>
+                    <li><code>optimize_cron</code>：定时执行 IP 优选的 Cron 表达式，例如：'0 3 * * *' 表示每天凌晨 3 点执行。</li>
+                    <li><code>heartbeat_cron</code>：定时执行心跳检测的 Cron 表达式，例如：'*/5 * * * *' 表示每 5 分钟执行一次。</li>
+                    <li><code>[API]</code>：API 服务配置。</li>
+                    <li><code>port</code>：API 服务监听的端口。</li>
+                    <li><code>[OpenWRT]</code>：OpenWRT 自动更新配置。</li>
+                    <li><code>enabled</code>：是否启用 SSH 自动更新功能，值为 <code>true</code> 或 <code>false</code>。</li>
+                    <li><code>host</code>：OpenWRT 设备的 IP 地址。</li>
+                    <li><code>port</code>：SSH 端口。</li>
+                    <li><code>username</code>：SSH 用户名。</li>
+                    <li><code>password</code>：SSH 密码。</li>
+                    <li><code>target</code>：更新目标，可以是 <code>openwrt</code> 或 <code>mosdns</code>。</li>
+                    <li><code>openwrt_hosts_path</code>：OpenWRT 的 hosts 文件路径。</li>
+                    <li><code>mosdns_hosts_path</code>：MosDNS 的 hosts 文件路径。</li>
+                    <li><code>post_update_command</code>：更新成功后执行的命令，例如重启 MosDNS：<code>/etc/init.d/mosdns restart</code>。</li>
+                    <li><code>[Download]</code>：下载配置。</li>
+                    <li><code>proxy</code>：下载代理，用于加速访问 GitHub。留空则不使用代理。代理地址会直接拼在下载链接前面，请确保格式正确，例如：<code>https://ghproxy.com/</code>。</li>
+                </ul>
+            </div>
+            <style>
+                .config-description {
+                    background-color: #333;
+                    border: 1px solid #444;
+                    border-radius: 5px;
+                    padding: 15px;
+                    margin-top: 20px;
+                    font-size: 14px;
+                }
+
+                .config-description p {
+                    margin-bottom: 10px;
+                }
+
+                .config-description ul {
+                    list-style-type: none;
+                    padding-left: 20px;
+                }
+
+                .config-description li {
+                    margin-bottom: 5px;
+                }
+
+                .config-description li::before {
+                    content: '•';
+                    color: #e67e22;
+                    display: inline-block;
+                    width: 1em;
+                    margin-left: -1em;
+                }
+
+                .config-description code {
+                    background-color: #444;
+                    color: #f9e79f;
+                    padding: 2px 5px;
+                    border-radius: 3px;
+                    font-family: monospace;
+                }
+
+                .config-description strong {
+                    color: #f9e79f;
+                }
+            </style>
         </div>
 
         <div id="logs-card" class="card">
