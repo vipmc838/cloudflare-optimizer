@@ -189,10 +189,6 @@ class CloudflareOptimizer:
             logging.info("开始执行 Cloudflare IP 优选...")
             command = [self.tool_path] + self.params
             
-            # 确保结果文件被清理，以免读取到旧数据
-            if os.path.exists(self.output_filepath):
-                os.remove(self.output_filepath)
-
             # 设置 cwd (current working directory) 为工具所在的目录
             # 这可以确保工具生成的所有临时文件（如 ip.txt）都在正确的路径下
             process = subprocess.run(
@@ -209,6 +205,15 @@ class CloudflareOptimizer:
             logging.error(f"执行优选任务时发生未知错误: {e}")
         finally:
             app_state.optimizer_lock.release()
+
+    def load_results_from_file(self):
+        """从现有的结果文件中加载数据到应用状态"""
+        if os.path.exists(self.output_filepath):
+            logging.info(f"正在从 {self.output_filepath} 加载已有结果...")
+            self._parse_results()
+        else:
+            logging.warning(f"结果文件 {self.output_filepath} 不存在，跳过加载。")
+
 
     def _parse_results(self):
         """解析CSV结果文件并更新全局状态"""
