@@ -3,3 +3,4 @@ apscheduler
 requests
 waitress
 paramiko
+PyYAML
