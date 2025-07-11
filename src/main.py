@@ -53,6 +53,7 @@ def main() -> None:
     CONFIG_DIR = os.path.join(PROJECT_ROOT, 'config')
     CONFIG_FILE_PATH = os.path.join(CONFIG_DIR, 'config.ini')
     LOG_FILE_PATH = os.path.join(PROJECT_ROOT, 'app.log') # 定义日志文件路径
+    STATIC_DIR = os.path.join(PROJECT_ROOT, 'static')
     TEMPLATE_DIR = os.path.join(PROJECT_ROOT, 'templates')
 
     # 确保配置目录存在
@@ -121,8 +122,8 @@ def main() -> None:
     initial_run_thread = threading.Thread(target=optimizer.run_speed_test)
     initial_run_thread.start()
 
-    # 6. 创建 Flask App, 并传入模板文件夹路径
-    app = create_app(optimizer, template_folder=TEMPLATE_DIR)
+    # 6. 创建 Flask App, 并传入模板和静态文件夹路径
+    app = create_app(optimizer, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
     # 在 app.config 中存储配置对象，方便在 API 路由中使用
     app.config['CONFIG'] = config
     app.config['CONFIG_FILE_PATH'] = CONFIG_FILE_PATH
