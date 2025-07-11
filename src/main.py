@@ -78,6 +78,7 @@ def main() -> None:
             'password': 'your_password',
             'target': 'openwrt',
             'openwrt_hosts_path': '/etc/hosts',
+            'adguardhome_config_path': '/etc/AdGuardHome.yaml',
             'mosdns_hosts_path': '/etc/mosdns/rule/hosts.txt',
             'post_update_command': ''
         }
