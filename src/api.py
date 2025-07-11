@@ -57,23 +57,20 @@ def create_app(optimizer: CloudflareOptimizer, template_folder: str, static_fold
             logging.warning(f"日志文件未找到: {log_file_path}")
             return jsonify({"error": "日志文件未找到"}), 404
 
-    @app.route('/api/config', methods=['POST'])
+    @app.route('/api/config', methods=['POST'])  # 修改为 POST 方法
     def update_config():
-        # 此处需要实现更新 config.ini 文件的逻辑
-        # 为了安全起见，建议添加身份验证和输入验证
-        # 这里只是一个示例，实际应用中需要更严谨的处理
+        config_file_path = current_app.config['CONFIG_FILE_PATH']
         try:
-            new_config = request.get_json()
-            if not new_config:
-                return jsonify({"error": "No config data provided"}), 400
-            
-            config_obj = configparser.ConfigParser()
-            config_obj.read_dict(new_config) # 从接收到的 JSON 数据更新配置
-            
-            config_file_path = current_app.config['CONFIG_FILE_PATH']
-            with open(config_file_path, 'w', encoding='utf-8') as configfile:
-                config_obj.write(configfile)
-            return jsonify({"message": "Config updated successfully"})
+            # 直接获取文本内容
+            new_config = request.get_data(as_text=True)
+
+            # 写入文件
+            with open(config_file_path, 'w', encoding='utf-8') as f:
+                f.write(new_config)
+
+            # 重新加载配置到 Flask app
+            current_app.config['CONFIG'].read(config_file_path, encoding='utf-8')
+            return jsonify({"message": "配置已更新"}), 200  # 返回成功消息
         except Exception as e:
             logging.error(f"Failed to update config: {e}")
             return jsonify({"error": f"Failed to update config: {e}"}), 500
