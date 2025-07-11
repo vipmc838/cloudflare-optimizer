@@ -86,7 +86,7 @@
                     <li><code>openwrt_hosts_path</code>：OpenWRT 的 hosts 文件路径。</li>
                     <li><code>mosdns_hosts_path</code>：MosDNS 的 hosts 文件路径。</li>
                     <li><code>adguardhome_config_path</code>：AdGuard Home 的 YAML 配置文件路径。</li>
-                    <li><code>post_update_command</code>：更新成功后执行的命令，例如重启 MosDNS：<code>/etc/init.d/mosdns restart</code>。</li>
+                    <li><code>post_update_command</code>：更新成功后执行的命令，例如重启 MosDNS：<code>/etc/init.d/mosdns restart</code>。重启AdGuardHome：<code>/etc/AdGuardHome/AdGuardHome restart</code> 具体填写ADG执行文件路径。</li>
                     <li><code>[Download]</code>：下载配置。</li>
                     <li><code>proxy</code>：下载代理，用于加速访问 GitHub。留空则不使用代理。代理地址会直接拼在下载链接前面，请确保格式正确，例如：<code>https://ghproxy.com/</code>。</li>
                 </ul>
