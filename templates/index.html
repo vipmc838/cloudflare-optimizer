@@ -82,9 +82,10 @@
                     <li><code>port</code>：SSH 端口。</li>
                     <li><code>username</code>：SSH 用户名。</li>
                     <li><code>password</code>：SSH 密码。</li>
-                    <li><code>target</code>：更新目标，可以是 <code>openwrt</code> 或 <code>mosdns</code>。</li>
+                    <li><code>target</code>：更新目标，可以是 <code>openwrt</code>、<code>mosdns</code> 或 <code>adguardhome</code>。</li>
                     <li><code>openwrt_hosts_path</code>：OpenWRT 的 hosts 文件路径。</li>
                     <li><code>mosdns_hosts_path</code>：MosDNS 的 hosts 文件路径。</li>
+                    <li><code>adguardhome_config_path</code>：AdGuard Home 的 YAML 配置文件路径。</li>
                     <li><code>post_update_command</code>：更新成功后执行的命令，例如重启 MosDNS：<code>/etc/init.d/mosdns restart</code>。</li>
                     <li><code>[Download]</code>：下载配置。</li>
                     <li><code>proxy</code>：下载代理，用于加速访问 GitHub。留空则不使用代理。代理地址会直接拼在下载链接前面，请确保格式正确，例如：<code>https://ghproxy.com/</code>。</li>
