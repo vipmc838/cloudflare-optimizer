@@ -40,10 +40,15 @@ def create_app(optimizer: CloudflareOptimizer, template_folder: str, static_fold
 
     @app.route('/api/config', methods=['GET'])
     def get_config():
-        config: configparser.ConfigParser = current_app.config['CONFIG']
-        # 将配置转换为字典，以便 JSON 序列化
-        config_dict = {section: dict(config.items(section)) for section in config.sections()}
-        return jsonify(config_dict)
+        # 直接读取并返回配置文件的原始文本内容，以保留顺序和注释
+        config_file_path = current_app.config['CONFIG_FILE_PATH']
+        try:
+            with open(config_file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+        except Exception as e:
+            logging.error(f"读取配置文件时出错: {e}")
+            return jsonify({"error": f"读取配置文件时出错: {e}"}), 500
 
     @app.route('/api/logs', methods=['GET'])
     def get_logs():
