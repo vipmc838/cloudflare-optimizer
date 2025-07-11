@@ -99,18 +99,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function updateConfig() {
         try {
-            const data = await fetchData(API_ENDPOINTS.config);
-            // 将从后端获取的 JSON 对象格式化为 INI 格式的字符串
-            let iniString = '';
-            for (const section in data) {
-                iniString += `[${section}]\n`;
-                for (const key in data[section]) {
-                    iniString += `${key} = ${data[section][key]}\n`;
-                }
-                iniString += '\n';
+            // 直接获取配置文件的原始文本，以保留顺序和注释
+            const response = await fetch(API_ENDPOINTS.config);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
+                throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
             }
+            const configText = await response.text();
             // 对 <textarea> 应该使用 .value 属性
-            configContentElem.value = iniString.trim();
+            configContentElem.value = configText;
             configContentElem.classList.remove('error-message');
         } catch (error) {
             configContentElem.value = `加载配置失败: ${error.message}`;
