@@ -23,7 +23,7 @@ body {
 }
 
 .container {
-    max-width: 1600px;
+    max-width: 1920px;
     margin: 0 auto;
     /* display: grid;  我们将网格布局应用在 .content-area 上 */
     gap: 20px;
@@ -39,7 +39,7 @@ header {
 
 .content-area {
     display: grid;
-    grid-template-columns: 4fr 3fr; /* 主内容区 4 份，配置区 3 份 */
+    grid-template-columns: 1fr 1fr; /* 左右两列等宽 */
     gap: 20px;
 }
 
