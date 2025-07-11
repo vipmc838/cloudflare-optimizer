@@ -34,8 +34,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制应用程序代码
 # 将 src 目录复制到容器的 /app/src
 COPY src/ ./src/
+
 # 将默认的 config 目录复制到容器中，作为备用
 COPY config/ ./config/
+
+# 复制 Web UI 相关文件
+COPY templates/ ./templates/
+COPY static/ ./static/
 
 # 更改工作目录所有权为新创建的用户
 RUN chown -R appuser:appgroup /app
