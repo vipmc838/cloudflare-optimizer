@@ -4,13 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const configContentElem = document.getElementById('config-content');
     const resultsContentElem = document.getElementById('results-content');
     const runTestBtn = document.getElementById('run-test');
+    const saveConfigBtn = document.getElementById('save-config');
 
     const API_ENDPOINTS = {
         best_ip: '/api/best_ip',
         results: '/api/results',
         logs: '/api/logs',
         config: '/api/config',
-        run_test: '/api/run_test'
+        run_test: '/api/run_test',
     };
 
     async function fetchData(url, options = {}) {
@@ -99,12 +100,42 @@ document.addEventListener('DOMContentLoaded', () => {
     async function updateConfig() {
         try {
             const data = await fetchData(API_ENDPOINTS.config);
-            configContentElem.textContent = JSON.stringify(data, null, 2);
+            // 将从后端获取的 JSON 对象格式化为 INI 格式的字符串
+            let iniString = '';
+            for (const section in data) {
+                iniString += `[${section}]\n`;
+                for (const key in data[section]) {
+                    iniString += `${key} = ${data[section][key]}\n`;
+                }
+                iniString += '\n';
+            }
+            // 对 <textarea> 应该使用 .value 属性
+            configContentElem.value = iniString.trim();
+            configContentElem.classList.remove('error-message');
         } catch (error) {
-            configContentElem.textContent = `加载配置失败: ${error.message}`;
+            configContentElem.value = `加载配置失败: ${error.message}`;
             configContentElem.classList.add('error-message');
         }
     }
+
+    saveConfigBtn.addEventListener('click', async () => {
+        const newConfigText = configContentElem.value;
+        saveConfigBtn.disabled = true;
+        saveConfigBtn.textContent = '正在保存...';
+        try {
+            const result = await fetchData(API_ENDPOINTS.config, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: newConfigText,
+            });
+            alert(result.message || '配置已成功保存！');
+        } catch (error) {
+            alert(`保存配置失败: ${error.message}`);
+        } finally {
+            saveConfigBtn.disabled = false;
+            saveConfigBtn.textContent = '保存配置';
+        }
+    });
 
     runTestBtn.addEventListener('click', async () => {
         runTestBtn.disabled = true;
