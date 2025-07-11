@@ -10,7 +10,7 @@ import logging
 import csv
 from io import StringIO
 from .state import app_state
-from .updater import update_openwrt_hosts
+from .updater import update_openwrt_hosts, update_adguard_hosts
 
 class CloudflareOptimizer:
     def __init__(self, config, config_dir='.'):
@@ -239,8 +239,12 @@ class CloudflareOptimizer:
                 logging.info(f"成功解析结果，最优IP: {app_state.best_ip}")
 
                 # 如果启用了 OpenWRT 更新，则执行更新
-                if self.openwrt_config and app_state.best_ip:
-                    update_openwrt_hosts(self.openwrt_config, app_state.best_ip)
+                if self.openwrt_config and self.openwrt_config.getboolean('enabled') and app_state.best_ip:
+                    target = self.openwrt_config.get('target', fallback='openwrt')
+                    if target == 'adguardhome':
+                        update_adguard_hosts(self.openwrt_config, app_state.best_ip)
+                    else: # 'openwrt' or 'mosdns'
+                        update_openwrt_hosts(self.openwrt_config, app_state.best_ip)
                 
         except FileNotFoundError:
             logging.error(f"结果文件 '{self.output_filepath}' 未找到，解析失败。")
