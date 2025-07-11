@@ -116,10 +116,24 @@ def main() -> None:
     # 4. 下载/检查工具
     optimizer.download_and_extract_tool()
 
-    # 5. 启动时先执行一次优选
-    logging.info("程序启动，立即执行一次IP优选...")
-    # 在新线程中执行，避免阻塞后续的API服务启动
-    initial_run_thread = threading.Thread(target=optimizer.run_speed_test)
+    # 5. 启动时检查 result.csv 并决定初始操作
+    def startup_check():
+        """检查现有结果或运行新测试的启动逻辑"""
+        if not os.path.exists(optimizer.output_filepath):
+            # 文件不存在，立即执行一次优选
+            logging.info("启动检查: result.csv 不存在，将立即执行一次IP优选...")
+            optimizer.run_speed_test()
+        else:
+            # 文件存在，解析文件并进行心跳检测
+            logging.info(f"启动检查: 发现已存在的 result.csv，将进行解析和心跳测试。")
+            optimizer.load_results_from_file()
+            if app_state.best_ip:
+                check_best_ip(optimizer)
+            else:
+                logging.warning("启动检查: result.csv 解析失败或为空，将执行一次新的IP优选。")
+                optimizer.run_speed_test()
+
+    initial_run_thread = threading.Thread(target=startup_check, name="StartupCheckThread")
     initial_run_thread.start()
 
     # 6. 创建 Flask App, 并传入模板和静态文件夹路径
