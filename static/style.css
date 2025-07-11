@@ -1,14 +1,15 @@
 :root {
     --bg-color: #1a1a1a;
     --card-bg-color: #2c2c2c;
-    --text-color: #e0e0e0;
+    --text-color: #d9d0c1; /* 更柔和的文字颜色 */
     --header-color: #ffffff;
     --border-color: #444444;
-    --accent-color: #007bff;
-    --accent-hover-color: #0056b3;
+    --accent-color: #e67e22; /* 暖色调主色 */
+    --accent-hover-color: #d35400;
     --success-color: #28a745;
     --error-color: #dc3545;
     --font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    --font-size: 16px; /* 基础字体大小 */
 }
 
 body {
@@ -16,6 +17,7 @@ body {
     color: var(--text-color);
     font-family: var(--font-family);
     margin: 0;
+    font-size: var(--font-size);
     padding: 20px;
     line-height: 1.6;
 }
@@ -49,6 +51,15 @@ header h1 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+.button-container {
+    text-align: right;
+    margin-top: 15px;
+}
+
+.card p, .card label {
+    font-size: 1em; /* 确保卡片内文本大小与基础字体一致 */
+}
+
 .card h2 {
     margin-top: 0;
     color: var(--header-color);
@@ -71,15 +82,38 @@ header h1 {
     margin: 0;
 }
 
-pre {
-    background-color: var(--bg-color);
-    padding: 15px;
+#config-content {
+    background-color: #333; /* 略深的背景色 */
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    max-height: 400px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 0.9em;
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 200px;
+}
+
+/* 调整 pre 元素的样式，使其与 textarea 风格统一 */
+#logs-card pre {
+    background-color: #333;
+    color: var(--text-color);
+    border-radius: 5px;
+    padding: 10px;
     overflow-y: auto;
-    margin: 0;
+    max-height: 300px;
+    white-space: pre-wrap;
+}
+
+#results-card pre {
+    background-color: #333;
+    color: var(--text-color);
+    border-radius: 5px;
+    padding: 10px;
+    overflow-x: auto;
+    white-space: pre; /* 保持原有格式 */
 }
 
 #run-test {
@@ -97,9 +131,28 @@ pre {
     background-color: var(--accent-hover-color);
 }
 
+#save-config {
+    background-color: #6c757d; /* 灰色，表示辅助操作 */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+#save-config:hover {
+    background-color: #5a6268;
+}
+
 #run-test:disabled {
     background-color: #555;
     cursor: not-allowed;
+}
+
+.message {
+    margin-top: 10px;
 }
 
 .error-message {
