@@ -12,16 +12,14 @@ from io import StringIO
 from .state import app_state
 from .updater import update_openwrt_hosts
 
-# 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 class CloudflareOptimizer:
     def __init__(self, config, config_dir='.'):
         self.config_dir = config_dir
-        self.tool_dir = os.path.join(self.config_dir, "cfs_tool")
+        self.tool_dir = os.path.join(self.config_dir, "cfst_tool")
         self.tool_path = self._get_tool_path()
         self.params = config['CloudflareSpeedTest']['params'].split()
         self.openwrt_config = config['OpenWRT'] if 'OpenWRT' in config else None
+        self.download_config = config['Download'] if 'Download' in config else {}
         
         # 获取原始输出文件名并构建完整路径
         output_filename = self._find_output_filename()
@@ -129,11 +127,20 @@ class CloudflareOptimizer:
         
         try:
             url = self._get_download_url()
+
+            proxy_url = self.download_config.get('proxy', '').strip()
+            if proxy_url:
+                download_url = proxy_url + url
+                logging.info(f"将通过代理下载: {download_url}")
+            else:
+                download_url = url
+                logging.info(f"开始直接下载: {url}")
+
             archive_filename = url.split('/')[-1]
             archive_path = os.path.join(self.tool_dir, archive_filename)
 
             # 下载
-            with requests.get(url, stream=True, timeout=30) as r:
+            with requests.get(download_url, stream=True, timeout=60) as r:
                 r.raise_for_status()
                 with open(archive_path, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=8192):
