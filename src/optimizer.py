@@ -17,7 +17,7 @@ class CloudflareOptimizer:
         self.config_dir = config_dir
         self.tool_dir = os.path.join(self.config_dir, "cfst_tool")
         self.tool_path = self._get_tool_path()
-        self.params = config['CloudflareSpeedTest']['params'].split()
+        self.params = config['cfst']['params'].split()
         self.openwrt_config = config['OpenWRT'] if 'OpenWRT' in config else None
         self.download_config = config['Download'] if 'Download' in config else {}
         
@@ -101,6 +101,10 @@ class CloudflareOptimizer:
             response.raise_for_status()
             release_data = response.json()
             
+            # 按照您的要求，打印出从 API 获取到的所有可用资源文件名
+            available_assets = [asset.get("name", "unnamed_asset") for asset in release_data.get("assets", [])]
+            logging.info(f"从 API 获取到以下可用资源: {available_assets}")
+
             # 查找匹配的 asset
             asset_name_fragment = f"cfst_{os_name}_{arch}"
             logging.info(f"正在查找包含 '{asset_name_fragment}' 的资源文件...")
@@ -113,7 +117,11 @@ class CloudflareOptimizer:
         except requests.RequestException as e:
             logging.error(f"无法从 GitHub API 获取最新版本信息: {e}")
         
-        raise RuntimeError("无法找到适用于当前系统的 CloudflareSpeedTest 下载链接。")
+        # 抛出更详细的错误信息
+        error_message = "无法找到适用于当前系统的 CloudflareSpeedTest 下载链接。"
+        if 'available_assets' in locals() and available_assets:
+            error_message += f" 期望文件名包含 '{asset_name_fragment}'，但只找到了: {available_assets}"
+        raise RuntimeError(error_message)
 
 
     def download_and_extract_tool(self):
