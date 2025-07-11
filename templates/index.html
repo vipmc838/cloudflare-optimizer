@@ -13,29 +13,31 @@
             <p>一个用于自动优选、测试和更新 Cloudflare CDN IP 的工具。</p>
         </header>
 
-        <div id="status-card" class="card">
-            <div>
-                <h2>当前最优 IP</h2>
-                <p id="best-ip-value">正在加载...</p>
+        <div class="content-area">
+            <div id="main-content">
+                <div id="status-card" class="card">
+                    <div>
+                        <h2>当前最优 IP</h2>
+                        <p id="best-ip-value">正在加载...</p>
+                    </div>
+                    <button id="run-test">立即优选</button>
+                </div>
+
+                <div id="results-card" class="card">
+                    <h2>最新优选结果</h2>
+                    <div id="results-content">
+                        <p>正在加载...</p>
+                    </div>
+                </div>
+
+                <div id="logs-card" class="card">
+                    <h2>实施日志</h2>
+                    <pre id="log-content">正在加载...</pre>
+                </div>
             </div>
-            <button id="run-test">立即优选</button>
-        </div>
-
-        <div id="results-card" class="card">
-            <h2>最新优选结果</h2>
-            <div id="results-content">
-                <p>正在加载...</p>
-            </div>
-        </div>
-
-        <div id="logs-card" class="card">
-            <h2>实施日志</h2>
-            <pre id="log-content">正在加载...</pre>
-        </div>
-
-        <div id="config-card" class="card">
-            <h2>配置 (config.ini)</h2>
-            <textarea id="config-content" rows="15">正在加载...</textarea>
+            <div id="config-column" class="card">
+                <h2>配置 (config.ini)</h2>
+                <textarea id="config-content" rows="15">正在加载...</textarea>
             <div class="button-container">
                 <button id="save-config">保存配置</button>
             </div>
@@ -90,7 +92,6 @@
             </div>
         </div>
     </div>
-
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
