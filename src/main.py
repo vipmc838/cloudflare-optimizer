@@ -64,7 +64,7 @@ def main() -> None:
         logging.warning(f"配置文件未找到: {CONFIG_FILE_PATH}，将使用默认配置并创建文件。")
         config = configparser.ConfigParser()
         config['cfst'] = {
-            'params': '-p 0 -o result.csv -url https://cf.xiu2.xyz/url -dn 10 -t 2 '
+            'params': '-p 0 -o result.csv -url https://cf.xiu2.xyz/url -dn 10 -t 2 -dd '
         }
         config['Scheduler'] = {
             'optimize_cron': '0 3 * * *',
@@ -139,17 +139,17 @@ def main() -> None:
 
     # 6. 创建 Flask App, 并传入模板和静态文件夹路径
     app = create_app(optimizer, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
-    # 在 app.config 中存储配置对象，方便在 API 路由中使用
+
+    # 7. 配置并启动调度器
+    scheduler = setup_scheduler(optimizer, config)
+
+    # 8. 在 app.config 中存储核心对象，方便在 API 路由中访问
     app.config['CONFIG'] = config
+    app.config['SCHEDULER'] = scheduler
     app.config['CONFIG_FILE_PATH'] = CONFIG_FILE_PATH
     app.config['LOG_FILE_PATH'] = LOG_FILE_PATH
 
-
-    # 7. 配置并启动调度器
-
-    scheduler = setup_scheduler(optimizer, config)
-
-    # 8. 启动API服务
+    # 9. 启动API服务
     api_port = config['API'].getint('port', 6788)
     logging.info(f"API服务将在 http://0.0.0.0:{api_port} 上启动")
     try:
