@@ -11,7 +11,7 @@ END_MARKER = "##自动CF优选结束##"
 def _process_hosts_content(content: str, new_ip: str) -> tuple[str, bool]:
     """
     处理 hosts 文件内容，替换指定块内的 IP 地址。
-    如果标记不存在，则在文件顶部添加。
+    如果标记不存在，则在文件末尾添加。
     返回 (更新后的内容, 是否有变化)
     """
     lines = content.splitlines()
@@ -19,16 +19,17 @@ def _process_hosts_content(content: str, new_ip: str) -> tuple[str, bool]:
     has_start = any(line.strip() == START_MARKER for line in lines)
     has_end = any(line.strip() == END_MARKER for line in lines)
 
-    # 如果标记不存在，则在文件顶部添加
+    # 如果标记不存在，则在文件末尾添加
     if not has_start or not has_end:
-        logging.info("OpenWRT 更新: 未找到标记，将在文件顶部添加。")
-        new_content_list = [
+        logging.info("OpenWRT 更新: 未找到标记，将在文件末尾添加。")
+        # 将原内容放在前面，新块追加在后面，更安全
+        new_content_list = lines + [
+            "", # 确保与原内容有空行分隔
             START_MARKER,
             "# 请在此标记之间添加需要自动更新的域名",
             "# 示例：example.com",
             END_MARKER,
-            "",
-        ] + lines
+        ]
         return "\n".join(new_content_list), True
 
     new_lines = []
@@ -53,8 +54,8 @@ def _process_hosts_content(content: str, new_ip: str) -> tuple[str, bool]:
             
             parts = line.split()
             if len(parts) >= 1:
-                domain = parts[0]
-                new_lines.append(f"{domain} {new_ip}")
+                domain = parts[0] # 只取第一个词作为域名
+                new_lines.append(f"{new_ip} {domain}") # 修正为正确的 hosts 格式：IP 域名
             else:
                 new_lines.append(line) # 保留无法处理的行
         else:
