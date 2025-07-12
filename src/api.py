@@ -24,8 +24,10 @@ def create_app(optimizer: CloudflareOptimizer, template_folder: str, static_fold
     @app.route('/api/results', methods=['GET'])
     def get_results():
         if app_state.last_results:
-            return jsonify(app_state.last_results)
-        return jsonify({"error": "尚未有优选结果"}), 404
+            # 仅返回前10条结果给前端，减轻前端渲染压力
+            return jsonify(app_state.last_results[:10])
+        # 如果没有结果，返回空列表，前端会显示“暂无结果”
+        return jsonify([])
 
     @app.route('/api/run_test', methods=['POST'])
     def run_test_manual():
