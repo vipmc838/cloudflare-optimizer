@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, current_app, render_template, request
 from .optimizer import CloudflareOptimizer  # 确保使用相对导入
 from .state import app_state
+from apscheduler.triggers.cron import CronTrigger
 import threading
 import logging
 import configparser
@@ -72,11 +73,32 @@ def create_app(optimizer: CloudflareOptimizer, template_folder: str, static_fold
             # 写入文件
             with open(config_file_path, 'w', encoding='utf-8') as f:
                 f.write(new_config)
+            
+            logging.info("配置文件已保存，正在热重载应用配置...")
 
-            # 重新加载配置到 Flask app
-            current_app.config['CONFIG'].read(config_file_path, encoding='utf-8')
-            return jsonify({"message": "配置已更新"}), 200  # 返回成功消息
+            # 1. 重新加载配置到内存中的 config 对象
+            config = current_app.config['CONFIG']
+            config.read(config_file_path, encoding='utf-8')
+
+            # 2. 通知 Optimizer 实例重载其内部配置
+            optimizer_instance = current_app.config.get('OPTIMIZER_INSTANCE')
+            if optimizer_instance:
+                optimizer_instance.reload_config()
+
+            # 3. 重新加载并应用定时任务
+            scheduler = current_app.config.get('SCHEDULER')
+            if scheduler:
+                new_optimize_cron = config.get('Scheduler', 'optimize_cron', fallback='0 3 * * *')
+                new_heartbeat_cron = config.get('Scheduler', 'heartbeat_cron', fallback='*/5 * * * *')
+
+                scheduler.reschedule_job('job_optimize_ip', trigger=CronTrigger.from_crontab(new_optimize_cron))
+                scheduler.reschedule_job('job_heartbeat_check', trigger=CronTrigger.from_crontab(new_heartbeat_cron))
+                
+                logging.info(f"定时优选任务已更新，新 Cron: {new_optimize_cron}")
+                logging.info(f"心跳检测任务已更新，新 Cron: {new_heartbeat_cron}")
+
+            return jsonify({"message": "配置已更新并成功热重载！"}), 200
         except Exception as e:
-            logging.error(f"Failed to update config: {e}")
-            return jsonify({"error": f"Failed to update config: {e}"}), 500
+            logging.error(f"更新配置时失败: {e}")
+            return jsonify({"error": f"更新配置时失败: {e}"}), 500
     return app
