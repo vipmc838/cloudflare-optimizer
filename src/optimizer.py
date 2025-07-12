@@ -14,12 +14,18 @@ from .updater import update_openwrt_hosts, update_adguard_hosts
 
 class CloudflareOptimizer:
     def __init__(self, config, config_dir='.'):
+        self.config = config # 保存对配置对象的引用
         self.config_dir = config_dir
         self.tool_dir = os.path.join(self.config_dir, "cfst_tool")
         self.tool_path = self._get_tool_path()
-        self.params = config['cfst']['params'].split()
-        self.openwrt_config = config['OpenWRT'] if 'OpenWRT' in config else None
-        self.download_config = config['Download'] if 'Download' in config else {}
+        self.reload_config() # 调用新方法来加载参数
+
+    def reload_config(self):
+        """从 self.config 对象重新加载配置参数，以便热更新。"""
+        logging.info("正在重新加载 Optimizer 配置...")
+        self.params = self.config['cfst']['params'].split()
+        self.openwrt_config = self.config['OpenWRT'] if 'OpenWRT' in self.config else None
+        self.download_config = self.config['Download'] if 'Download' in self.config else {}
         
         # 获取原始输出文件名并构建完整路径
         output_filename = self._find_output_filename()
