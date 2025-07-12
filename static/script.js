@@ -139,9 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
         runTestBtn.textContent = '正在优选...';
         try {
             const result = await fetchData(API_ENDPOINTS.run_test, { method: 'POST' });
-            alert(result.message);
+            console.log(result.message); // 在控制台输出提示，避免弹窗打扰
             // Give some time for the backend to process before refreshing
-            setTimeout(fetchAllData, 3000); 
+            setTimeout(updateDynamicData, 3000);
         } catch (error) {
             alert(`启动优选任务失败: ${error.message}`);
         } finally {
@@ -149,17 +149,18 @@ document.addEventListener('DOMContentLoaded', () => {
             runTestBtn.textContent = '立即优选';
         }
     });
-
-    function fetchAllData() {
+    
+    // 此函数只更新动态变化的数据
+    function updateDynamicData() {
         updateBestIP();
         updateResults();
         updateLogs();
-        updateConfig();
     }
 
     // Initial load
-    fetchAllData();
+    updateDynamicData(); // 首次加载动态数据
+    updateConfig();      // 首次加载配置，之后不再定时刷新
 
     // Periodically refresh data every 10 seconds
-    setInterval(fetchAllData, 10000);
+    setInterval(updateDynamicData, 10000);
 });
