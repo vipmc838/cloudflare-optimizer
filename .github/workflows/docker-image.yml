@@ -1,11 +1,9 @@
 # 工作流名称
 name: Publish to Docker Hub
 
-# 触发条件：当有代码推送到 main 分支时触发此工作流
+# 触发条件：手动触发此工作流
 on:
-  push:
-    branches:
-      - 'main'
+  workflow_dispatch:
 
 jobs:
   # 定义一个名为 build-and-push 的作业
