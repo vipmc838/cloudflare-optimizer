@@ -4,3 +4,6 @@ requests
 waitress
 paramiko
 PyYAML
+requests
+huaweicloudsdkcore
+huaweicloudsdkdns
