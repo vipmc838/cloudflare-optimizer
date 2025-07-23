@@ -40,6 +40,22 @@ def setup_scheduler(optimizer: CloudflareOptimizer, config: configparser.ConfigP
     )
     logging.info(f"已添加心跳检测任务，Cron: {heartbeat_cron}")
     
+    # 新增：华为DNS更新任务
+    dns_update_cron = config.get('Scheduler', 'dns_update_cron', fallback=None)
+    if dns_update_cron:
+        def run_huawei_dns_update():
+            # 这里执行你放在 src 目录的脚本，比如 src/huawei_dns_update.py
+            # 也可以改成绝对路径，或其它执行方式
+            subprocess.run(["python3", "src/huawei_dns_update.py"], check=False)
+        
+        scheduler.add_job(
+            run_huawei_dns_update,
+            trigger=CronTrigger.from_crontab(dns_update_cron),
+            id='job_huawei_dns_update',
+            name='华为DNS定时更新'
+        )
+        logging.info(f"已添加华为DNS更新任务，Cron: {dns_update_cron}")
+
     scheduler.start()
     return scheduler
 
