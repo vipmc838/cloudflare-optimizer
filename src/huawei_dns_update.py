@@ -26,7 +26,7 @@ RECORD_TYPE = "A"
 TTL = 300
 MAX_RECORDS = 10
 
-API_IPS_URL = "https://prdhbdkmqqke.sealosgzg.site/api/results"
+API_IPS_URL = "http://0.0.0.0/api/results"
 
 logging.basicConfig(
     filename="huawei_dns_sdk.log",
